@@ -64,17 +64,10 @@ class ResilienceLandscapesApp {
                 const form = document.querySelector('form[name="act1-feedback"]');
 
                 // Submit to Netlify via AJAX
-                const formData = new FormData(form);
-                const params = new URLSearchParams();
-                params.append("form-name", "act1-feedback");
-                for (const pair of formData.entries()) {
-                    params.append(pair[0], pair[1]);
-                }
-
                 fetch("/", {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: params.toString(),
+                    body: new URLSearchParams(new FormData(form)).toString(),
                 })
                     .then(() => {
                         console.log('User Feedback submitted to Netlify');
