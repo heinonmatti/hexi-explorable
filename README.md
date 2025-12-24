@@ -1,16 +1,15 @@
 # Resilience Landscapes
 
-An interactive explorable explanation teaching how complex systems fail—using attractor dynamics, tipping points, and early warning signals. Built in the style of [Nicky Case](https://ncase.me).
+An interactive explorable explanation teaching how complex systems fail and how they're navigated — using attractor dynamics, tipping points, ruin risk, and so forth. See http://mattiheino.com/sense-of-safety for background. 
+
+NOTE: This was built using Google Antigravity. I don't know anything about software development.
 
 ## 🎯 What You'll Learn
 
 Through hands-on interaction with a hexagonal "stability landscape," users discover:
 
 1. **Hysteresis** — Why it's easy to fall into bad states but expensive to escape
-2. **N-Tipping vs B-Tipping** — Two different paths to system failure  
-3. **Early Warning Signals** — Reading the "wobble" before collapse
-4. **The Myth of Panic** — Why transparency beats false reassurance
-5. **Governance Tradeoffs** — Balancing optimization vs. adaptability
+2. -- COMING UP --
 
 ## 🚀 Getting Started
 
@@ -62,8 +61,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 This explorable is based on research on attractor landscapes and resilience:
 
-- Heino (2022) - Attractor landscapes: A unifying conceptual model
-- Heino (2024) - From a false sense of safety to resilience under uncertainty
+- Heino, M. T. J., Proverbio, D., Marchand, G., Resnicow, K., & Hankonen, N. (2022). Attractor landscapes: A unifying conceptual model for understanding behaviour change across scales of observation. Health Psychology Review, 17(4), 655–672. https://doi.org/10.1080/17437199.2022.2146598
+- Heino, M. T. J., Proverbio, D., Saurio, K., Siegenfeld, A., & Hankonen, N. (2024). From a false sense of safety to resilience under uncertainty. Frontiers in Psychology, 15. https://doi.org/10.3389/fpsyg.2024.1346542
 
 See the `data/` folder for full references.
 
@@ -73,5 +72,5 @@ See the `data/` folder for full references.
 
 ## 🙏 Acknowledgments
 
-- Inspired by [Nicky Case's](https://ncase.me) explorable explanations
-- Scientific foundation from the Heino research papers
+- Inspired by Nicky Case's [attractor landscapes explorable](https://ncase.me/attractors)
+- Grateful for Daniele Proverbio for his collaboration on the related research papers

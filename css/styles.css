@@ -1,0 +1,963 @@
+/* ========================================
+   RESILIENCE LANDSCAPES - MAIN STYLESHEET
+   ======================================== */
+
+/* CSS Custom Properties (Design Tokens) */
+:root {
+    /* Colors - Core Palette */
+    --bg-primary: #FAFAFA;
+    --bg-secondary: #F0F0F0;
+    --text-primary: #1A1A2E;
+    --text-secondary: #4A4A68;
+    --text-muted: #8888A0;
+    
+    /* Colors - Elevation Gradient (valleys to ridges) */
+    --elevation-deep: #1E3A5F;      /* -3: Deep valley */
+    --elevation-medium: #2E86AB;    /* -2: Medium valley */
+    --elevation-shallow: #45B7A0;   /* -1: Shallow valley */
+    --elevation-neutral: #A0A0A0;   /*  0: Neutral */
+    --elevation-low-ridge: #E8A838; /* +1: Low ridge */
+    --elevation-medium-ridge: #E07B39; /* +2: Medium ridge */
+    --elevation-high-ridge: #E84855; /* +3: High ridge */
+    --elevation-ruin: #0D0D1A;      /* Ruin state */
+    
+    /* Colors - Semantic */
+    --accent-primary: #4A90D9;
+    --accent-success: #45B7A0;
+    --accent-warning: #E8A838;
+    --accent-danger: #E84855;
+    --fog-color: rgba(200, 200, 220, 0.7);
+    
+    /* Colors - UI Elements */
+    --button-primary: #4A90D9;
+    --button-primary-hover: #3A7BC8;
+    --button-secondary: #E0E0E0;
+    --button-danger: #E84855;
+    
+    /* Typography */
+    --font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-size-base: 18px;
+    --font-size-small: 14px;
+    --font-size-large: 22px;
+    --font-size-h1: 2.5rem;
+    --font-size-h2: 1.8rem;
+    --font-size-h3: 1.4rem;
+    --line-height-base: 1.65;
+    --line-height-tight: 1.3;
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
+    
+    /* Layout */
+    --max-width: 800px;
+    --hex-size: 50px;
+    
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-medium: 300ms ease;
+    --transition-slow: 500ms ease;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 50%;
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: var(--font-size-base);
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: var(--line-height-base);
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   LAYOUT
+   ======================================== */
+
+#app {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+@media (max-width: 600px) {
+    #app {
+        padding: var(--space-md);
+    }
+}
+
+/* ========================================
+   TYPOGRAPHY
+   ======================================== */
+
+h1, h2, h3 {
+    line-height: var(--line-height-tight);
+    margin-top: 0;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: var(--font-size-h1);
+    margin-bottom: var(--space-md);
+}
+
+h2 {
+    font-size: var(--font-size-h2);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 3px solid var(--accent-primary);
+}
+
+h3 {
+    font-size: var(--font-size-h3);
+    margin-bottom: var(--space-md);
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: var(--space-md);
+}
+
+strong {
+    font-weight: 600;
+}
+
+em {
+    font-style: italic;
+}
+
+blockquote {
+    margin: var(--space-xl) 0;
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid var(--accent-primary);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+blockquote cite {
+    display: block;
+    margin-top: var(--space-sm);
+    font-size: var(--font-size-small);
+    font-style: normal;
+    color: var(--text-muted);
+}
+
+ul, ol {
+    margin-top: 0;
+    margin-bottom: var(--space-lg);
+    padding-left: var(--space-xl);
+}
+
+li {
+    margin-bottom: var(--space-sm);
+}
+
+a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--button-primary-hover);
+    text-decoration: underline;
+}
+
+/* ========================================
+   TITLE SECTION
+   ======================================== */
+
+.title-section {
+    text-align: center;
+    padding: var(--space-3xl) 0;
+    margin-bottom: var(--space-xl);
+}
+
+.title-section h1 {
+    background: linear-gradient(135deg, var(--elevation-deep) 0%, var(--accent-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: var(--font-size-large);
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+/* ========================================
+   NARRATIVE SECTIONS
+   ======================================== */
+
+.narrative-section {
+    margin-bottom: var(--space-3xl);
+}
+
+.learning-goals {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg) var(--space-xl);
+    list-style: none;
+}
+
+.learning-goals li {
+    position: relative;
+    padding-left: var(--space-lg);
+}
+
+.learning-goals li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+button {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    border: none;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+button:focus {
+    outline: 3px solid rgba(74, 144, 217, 0.4);
+    outline-offset: 2px;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.start-button,
+.continue-btn,
+.restart-btn,
+.ready-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: var(--space-xl) auto 0;
+    padding: var(--space-md) var(--space-xl);
+    background: linear-gradient(135deg, var(--button-primary) 0%, #3A7BC8 100%);
+    color: white;
+    font-weight: 600;
+    font-size: var(--font-size-large);
+    box-shadow: var(--shadow-md);
+}
+
+.start-button:hover,
+.continue-btn:hover,
+.restart-btn:hover,
+.ready-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.start-button:active,
+.continue-btn:active,
+.restart-btn:active,
+.ready-btn:active {
+    transform: translateY(0);
+}
+
+/* ========================================
+   ACT SECTIONS
+   ======================================== */
+
+.act-section {
+    margin-bottom: var(--space-3xl);
+    animation: fadeIn var(--transition-medium);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.act-content {
+    margin-top: var(--space-lg);
+}
+
+.instruction {
+    font-size: var(--font-size-large);
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+/* ========================================
+   SIMULATION CONTAINERS
+   ======================================== */
+
+.simulation-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+canvas {
+    display: block;
+    max-width: 100%;
+    border-radius: var(--radius-md);
+    background: white;
+    box-shadow: var(--shadow-sm);
+    touch-action: none; /* Prevent default touch behaviors */
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    width: 100%;
+}
+
+/* ========================================
+   MODE TOGGLE (Act 1)
+   ======================================== */
+
+.mode-toggle {
+    display: flex;
+    gap: var(--space-xs);
+    background: white;
+    padding: var(--space-xs);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.mode-btn {
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.mode-btn.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.mode-btn:hover:not(.active) {
+    background: var(--bg-secondary);
+}
+
+/* ========================================
+   CLICK COUNTER
+   ======================================== */
+
+.click-counter {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.counter-label {
+    color: var(--text-secondary);
+}
+
+.counter-value {
+    font-weight: 700;
+    font-size: var(--font-size-large);
+    color: var(--accent-primary);
+}
+
+/* ========================================
+   DUAL SIMULATION (Act 2)
+   ======================================== */
+
+.dual-simulation {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+@media (max-width: 700px) {
+    .dual-simulation {
+        grid-template-columns: 1fr;
+    }
+}
+
+.sim-panel {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-align: center;
+}
+
+.sim-panel h3 {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-md);
+}
+
+.sim-description {
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+    margin-top: var(--space-md);
+}
+
+.tipping-label {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    animation: tipReveal 0.5s ease;
+}
+
+@keyframes tipReveal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#n-tip-label {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    color: var(--accent-danger);
+}
+
+#b-tip-label {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    color: var(--elevation-medium-ridge);
+}
+
+/* Slider Styles */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 150px;
+    height: 8px;
+    background: #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ========================================
+   QUIZ SECTION (Act 2)
+   ======================================== */
+
+.quiz-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: var(--space-xl) 0;
+}
+
+.quiz-questions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.quiz-question {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.scenario {
+    font-weight: 500;
+    margin-bottom: var(--space-md);
+}
+
+.quiz-btn {
+    display: block;
+    width: 100%;
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+    background: white;
+    border: 2px solid var(--bg-secondary);
+    text-align: left;
+}
+
+.quiz-btn:hover {
+    border-color: var(--accent-primary);
+    background: #f8fafc;
+}
+
+.quiz-btn.correct {
+    background: #e8f5e9;
+    border-color: var(--accent-success);
+}
+
+.quiz-btn.incorrect {
+    background: #ffebee;
+    border-color: var(--accent-danger);
+}
+
+.feedback {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-small);
+}
+
+.feedback.correct {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.feedback.incorrect {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* ========================================
+   WOBBLE SIMULATION (Act 3)
+   ======================================== */
+
+.wobble-indicators {
+    display: flex;
+    gap: var(--space-xl);
+    margin-top: var(--space-lg);
+    width: 100%;
+    justify-content: center;
+}
+
+.indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.indicator-label {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+.indicator-bar {
+    width: 120px;
+    height: 12px;
+    background: #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.indicator-fill {
+    height: 100%;
+    width: 20%;
+    border-radius: 6px;
+    transition: width var(--transition-medium), background var(--transition-medium);
+}
+
+#oscillation-bar {
+    background: linear-gradient(90deg, var(--accent-success) 0%, var(--accent-warning) 50%, var(--accent-danger) 100%);
+}
+
+#recovery-bar {
+    background: linear-gradient(90deg, var(--accent-success) 0%, var(--accent-warning) 50%, var(--accent-danger) 100%);
+}
+
+.evacuate-btn {
+    padding: var(--space-md) var(--space-xl);
+    background: linear-gradient(135deg, var(--accent-danger) 0%, #c62828 100%);
+    color: white;
+    font-weight: 700;
+    font-size: var(--font-size-large);
+    box-shadow: var(--shadow-md);
+}
+
+.evacuate-btn:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.evacuate-warning {
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+    margin-top: var(--space-sm);
+}
+
+.score-display {
+    margin-top: var(--space-md);
+    font-size: var(--font-size-large);
+    font-weight: 600;
+}
+
+.hints-panel {
+    background: #fffde7;
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-top: var(--space-lg);
+}
+
+.hints-panel h4 {
+    margin-top: 0;
+    margin-bottom: var(--space-sm);
+}
+
+.hint-note {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+/* ========================================
+   MYTH OF PANIC (Act 4)
+   ======================================== */
+
+.resource-panel {
+    display: flex;
+    gap: var(--space-xl);
+    margin-top: var(--space-lg);
+}
+
+.resource {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.resource-icon {
+    font-size: 1.2rem;
+}
+
+.resource-value {
+    font-weight: 700;
+    font-size: var(--font-size-large);
+    color: var(--accent-primary);
+}
+
+.legend-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+    font-size: var(--font-size-small);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.ball-color { background: var(--accent-primary); }
+.valley-color { background: var(--elevation-shallow); }
+.fog-color { background: var(--fog-color); }
+
+.choice-panel {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-top: var(--space-lg);
+    text-align: center;
+}
+
+.choice-panel h4 {
+    margin-top: 0;
+}
+
+.choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+}
+
+@media (max-width: 500px) {
+    .choices {
+        grid-template-columns: 1fr;
+    }
+}
+
+.choice-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+    background: white;
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.choice-btn:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.choice-icon {
+    font-size: 2rem;
+}
+
+.choice-title {
+    font-weight: 600;
+    font-size: var(--font-size-large);
+}
+
+.choice-effect {
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+/* ========================================
+   GOVERNOR (Act 5)
+   ======================================== */
+
+.budget-panel {
+    display: flex;
+    gap: var(--space-xl);
+    margin-top: var(--space-lg);
+}
+
+.budget-display,
+.round-display {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.budget-icon,
+.round-icon {
+    font-size: 1.2rem;
+}
+
+.budget-value {
+    font-weight: 700;
+    font-size: var(--font-size-large);
+    color: var(--accent-warning);
+}
+
+.round-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.action-panel {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-top: var(--space-lg);
+}
+
+.action-panel h4 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+}
+
+@media (max-width: 500px) {
+    .actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    background: white;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.action-btn:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.action-icon {
+    font-size: 1.5rem;
+}
+
+.action-name {
+    font-weight: 600;
+}
+
+.action-cost {
+    color: var(--accent-warning);
+    font-weight: 500;
+}
+
+.action-desc {
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+/* ========================================
+   DEBRIEF SECTIONS
+   ======================================== */
+
+.debrief-section {
+    animation: fadeIn var(--transition-medium);
+}
+
+.debrief-content {
+    background: linear-gradient(180deg, #f8f9fa 0%, white 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+}
+
+.debrief-content h3 {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+}
+
+.entry-cost {
+    color: var(--accent-success);
+}
+
+.exit-cost {
+    color: var(--accent-danger);
+}
+
+/* ========================================
+   FINAL SECTION
+   ======================================== */
+
+.final-learnings {
+    list-style: none;
+    padding: 0;
+}
+
+.final-learnings li {
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--accent-primary);
+}
+
+.final-quote {
+    text-align: center;
+    font-size: var(--font-size-large);
+}
+
+.credits {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--bg-secondary);
+    text-align: center;
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.hidden {
+    display: none !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+    body {
+        background: white;
+    }
+    
+    .simulation-container,
+    .controls,
+    button {
+        display: none;
+    }
+}

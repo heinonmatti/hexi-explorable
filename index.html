@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="An interactive explorable teaching how complex systems fail—using attractor dynamics, tipping points, and early warning signals.">
+
+    <title>Resilience Landscapes</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <main id="app">
+        <!-- Title Section -->
+        <header class="title-section">
+            <h1>Resilience Landscapes</h1>
+            <p class="subtitle">An interactive explorable explanation of how complex systems fail and how they're navigated</p>
+        </header>
+
+        <!-- Introduction -->
+        <section class="narrative-section" id="intro">
+            <p>
+                Complex systems science offers a powerful conceptual tool to map transition dynamics: the attractor landscape. Imagine a pool table with a single billiard ball. Each position on the table represents a possible state for the system, and the current status is represented by the location of the billiard ball. Now imagine the surface isn’t flat, but contains hills and valleys. The valleys represent stable patterns – the attractors, collections of similar states that “trap” the ball. It’s easy for the ball to settle into a valley; it requires more effort or perturbation to push it out. The ridges between valleys are called <strong>tipping points</strong>. And sometimes, hidden in the fog, there are cliffs that lead to state of permanent destruction; <strong>ruin</strong>.
+            </p>
+			<p>
+                Perhaps your couch is an attractor for you. Maybe a new exercise regime is the opposite; an unsteady state, repellor, that's hard to maintain.
+            </p>
+            <p>
+                Thinking in terms of attractor landscapes can take your thinking past flowcharts suggesting neat, linear causes and effects. It shifts focus towards understanding the system’s dispositions, its underlying tendencies and stabilities. It encourages a focus on nurturing the conditions, tending the substrate, working the soil, from which desired behaviours – in deeper, more stable valleys – can emerge, and sustain themselves more naturally.
+            </p>
+            <p>
+                We should explore this.
+            </p>
+            <p>
+                In the next few minutes, you'll learn:
+            </p>
+            <ul class="learning-goals">
+                <li>Hysteresis: Why it's <em>easier to fall</em> into bad states than to climb out</li>
+                <li>[Other cool stuff connecting theory with practice, once I get it done]</li>
+            </ul>
+            <p>
+                Ready? Let's begin.
+            </p>
+            <button class="start-button" id="start-btn">Start the Journey</button>
+        </section>
+
+        <!-- Act 1: The Trap (Hysteresis) -->
+        <section class="act-section" id="act1" style="display: none;">
+            <h2>Act 1: The Trap</h2>
+            <div class="act-content">
+                <p class="instruction">
+                    The ball sits on a plateau. <strong>Click an adjacent tile</strong> to move the ball.
+                    <br><br>
+                    Try to get it into the valley (the dark green area).
+                </p>
+                <div class="simulation-container">
+                    <canvas id="act1-canvas"></canvas>
+                    <div class="controls">
+                        <!-- Click counter removed per user request -->
+                    </div>
+                </div>
+                <div class="act1-phases">
+                    <div class="phase" id="phase2-instructions" style="display: none;">
+                        <p>Now <strong>move the ball OUT of the valley</strong>. Slopes are slippery – if you stop for
+                            too long, the ball will slide back down!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 1 Debrief -->
+        <section class="debrief-section" id="act1-debrief" style="display: none;">
+            <div class="debrief-content">
+                <h3>What just happened?</h3>
+                <p>
+                    You probably noticed: it took <strong class="entry-cost">1 click</strong> to fall in,
+                    but it required <strong class="exit-cost">~8 clicks</strong> of persistent effort to escape.
+                </p>
+                <p>
+                    This asymmetry is called <strong>hysteresis</strong>.
+                </p>
+                <blockquote>
+                    "In disaster terms: communities lose trust quickly but rebuild it slowly.
+                    It's easy to fall into bad states, expensive to escape."
+                </blockquote>
+                <p>
+                    Think of a neighborhood that loses its last grocery store.
+                    Residents leave. Property values drop. Getting a new store?
+                    That requires <em>reversing</em> a downward spiral – far harder than the initial decline.
+                </p>
+				<p>
+                    It is rarely a single thing that causes anything in human systems, but rather often a combination of factors that only become known after the fact. This is captured in the sayings "Everything is obvious, once you know the answer", as well as "It's tough to make predictions, especially about the future." 
+                </p>
+				<p>
+                    Notice that by moving the ball to the adjacent tiles, you did something very important. You took steps to the "adjacent possible" state; a place you could get from where you currently were. This will be explored as we move further. 
+                </p>
+                <button class="continue-btn" id="continue-to-intermission">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Act 1 Intermission (Feedback & Coming Soon) -->
+        <section class="act-section" id="intermission" style="display: none;">
+            <h2>Intermission</h2>
+            <div class="act-content">
+                <p>
+                    What did you think about this first interaction?
+                </p>
+
+                <form name="act1-feedback" data-netlify="true" class="feedback-form" style="margin: 2rem 0;">
+                    <textarea name="feedback" id="user-feedback" placeholder="Share your thoughts here..."
+                        style="width: 100%; min-height: 120px; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
+                    <button type="submit" class="continue-btn" id="send-feedback-btn">Share Thoughts</button>
+                    <p id="feedback-thanks" style="display: none; color: #4db6ac; font-weight: bold; margin-top: 1rem;">
+                        Thanks for the feedback!
+                    </p>
+                </form>
+
+                <div class="coming-soon"
+                    style="background: #f8f9fa; padding: 2rem; border-radius: 12px; border: 1px dashed #ccc; text-align: center;">
+                    <h3>Act 2: [TBA]</h3>
+                    <p>Coming up later!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 2: Two Ways to Tip -->
+        <section class="act-section" id="act2" style="display: none;">
+            <h2>Act 2: Two Ways to Tip</h2>
+            <div class="act-content">
+                <p class="instruction">
+                    Systems can fail in two fundamentally different ways.
+                    Experiment with both to understand the difference.
+                </p>
+                <div class="dual-simulation">
+                    <div class="sim-panel">
+                        <h3>Grid A: Random Shocks</h3>
+                        <canvas id="act2a-canvas"></canvas>
+                        <div class="controls">
+                            <label for="noise-slider">Noise Level:</label>
+                            <input type="range" id="noise-slider" min="0" max="100" value="0">
+                            <span id="noise-value">0%</span>
+                        </div>
+                        <p class="sim-description">The landscape is stable. Only random shocks can push the ball into
+                            ruin.</p>
+                        <div class="tipping-label" id="n-tip-label" style="display: none;">
+                            <strong>N-Tipping:</strong> The system was stable. Bad luck struck.
+                        </div>
+                    </div>
+                    <div class="sim-panel">
+                        <h3>Grid B: Eroding Landscape</h3>
+                        <canvas id="act2b-canvas"></canvas>
+                        <div class="controls">
+                            <button id="time-passes-btn">⏳ Time Passes</button>
+                            <span id="erosion-count">Erosion cycles: 0</span>
+                        </div>
+                        <p class="sim-description">Noise is low, but the valley slowly erodes with each passing moment.
+                        </p>
+                        <div class="tipping-label" id="b-tip-label" style="display: none;">
+                            <strong>B-Tipping:</strong> The system lost resilience. The landscape changed beneath you.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 2 Quiz -->
+        <section class="quiz-section" id="act2-quiz" style="display: none;">
+            <h3>Quick Check</h3>
+            <p>For each scenario, decide: was it N-tipping or B-tipping?</p>
+            <div class="quiz-questions">
+                <div class="quiz-question" data-correct="n">
+                    <p class="scenario">A well-funded hospital is overwhelmed by an unexpected pandemic surge.</p>
+                    <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
+                    <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <div class="feedback"></div>
+                </div>
+                <div class="quiz-question" data-correct="b">
+                    <p class="scenario">A bridge that passed inspections for years suddenly collapses after decades of
+                        deferred maintenance.</p>
+                    <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
+                    <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <div class="feedback"></div>
+                </div>
+                <div class="quiz-question" data-correct="n">
+                    <p class="scenario">A freak lightning strike causes a massive wildfire in a healthy forest.</p>
+                    <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
+                    <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <div class="feedback"></div>
+                </div>
+            </div>
+            <button class="continue-btn" id="continue-to-act2-debrief" style="display: none;">Continue →</button>
+        </section>
+
+        <!-- Act 2 Debrief -->
+        <section class="debrief-section" id="act2-debrief" style="display: none;">
+            <div class="debrief-content">
+                <h3>Two Paths to Failure</h3>
+                <p>
+                    <strong>N-Tipping</strong> (noise-induced): A stable system hit by bad luck.
+                    The landscape was fine—a large random shock just pushed the ball over the edge.
+                </p>
+                <p>
+                    <strong>B-Tipping</strong> (bifurcation-induced): The landscape itself changed.
+                    The valley eroded until even a gentle breeze was enough to tip the ball.
+                </p>
+                <blockquote>
+                    "Prevention strategies differ. For N-tipping, you build buffers against shocks.
+                    For B-tipping, you monitor whether the landscape itself is changing."
+                </blockquote>
+                <p>
+                    Most catastrophic failures involve <em>both</em>:
+                    a system weakened by gradual erosion, finished off by a shock that
+                    wouldn't have mattered years earlier.
+                </p>
+                <button class="continue-btn" id="continue-to-act3">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Act 3: Reading the Wobble -->
+        <section class="act-section" id="act3" style="display: none;">
+            <h2>Act 3: Reading the Wobble</h2>
+            <div class="act-content">
+                <p class="instruction">
+                    The landscape is hidden in fog. You can only see the ball—and how it moves.
+                    Watch for <strong>warning signs</strong> that tipping is near.
+                </p>
+                <div class="simulation-container wobble-sim">
+                    <canvas id="act3-canvas"></canvas>
+                    <div class="wobble-indicators">
+                        <div class="indicator">
+                            <span class="indicator-label">Oscillation:</span>
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" id="oscillation-bar"></div>
+                            </div>
+                        </div>
+                        <div class="indicator">
+                            <span class="indicator-label">Recovery Speed:</span>
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" id="recovery-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button id="evacuate-btn" class="evacuate-btn">🚨 EVACUATE</button>
+                        <p class="evacuate-warning">Costly action—use wisely!</p>
+                    </div>
+                    <div class="score-display">
+                        <span>Score: <span id="act3-score">0</span></span>
+                    </div>
+                </div>
+                <div class="hints-panel">
+                    <h4>What to watch for:</h4>
+                    <ul>
+                        <li><strong>Increased wobble:</strong> The ball swings wider and wider</li>
+                        <li><strong>Slow recovery:</strong> After a disturbance, the ball takes longer to settle</li>
+                    </ul>
+                    <p class="hint-note">These are signs of <em>critical slowing down</em>—the system is losing its
+                        grip.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 3 Debrief -->
+        <section class="debrief-section" id="act3-debrief" style="display: none;">
+            <div class="debrief-content">
+                <h3>You don't need to see the cliff</h3>
+                <p>
+                    You learned to read the <strong>early warning signals</strong>:
+                </p>
+                <ul>
+                    <li><strong>Increased variance:</strong> The ball wobbles more as the valley shallows</li>
+                    <li><strong>Critical slowing down:</strong> Recovery takes longer near tipping points</li>
+                </ul>
+                <blockquote>
+                    "You don't need to see the cliff to know you're near it.
+                    Watch the wobble."
+                </blockquote>
+                <p>
+                    In real systems, this might be: rising volatility in markets,
+                    longer recovery times for ecosystems, or increasing polarization in societies.
+                </p>
+                <button class="continue-btn" id="continue-to-act4">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Act 4: The Myth of Panic -->
+        <section class="act-section" id="act4" style="display: none;">
+            <h2>Act 4: The Myth of Panic</h2>
+            <div class="act-content">
+                <p class="instruction">
+                    You're now a <strong>community leader</strong>. A slow-building crisis approaches.
+                    How will you communicate with your community?
+                </p>
+                <div class="simulation-container myth-sim">
+                    <canvas id="act4-canvas"></canvas>
+                    <div class="resource-panel">
+                        <div class="resource">
+                            <span class="resource-icon">🤝</span>
+                            <span class="resource-label">Public Trust:</span>
+                            <span class="resource-value" id="trust-value">100</span>
+                        </div>
+                        <div class="resource">
+                            <span class="resource-icon">⏱️</span>
+                            <span class="resource-label">Turns remaining:</span>
+                            <span class="resource-value" id="turns-value">10</span>
+                        </div>
+                    </div>
+                    <div class="legend-panel">
+                        <div class="legend-item"><span class="legend-color ball-color"></span> Community Safety (the
+                            ball)</div>
+                        <div class="legend-item"><span class="legend-color valley-color"></span> Precautionary Norms
+                            (valleys)</div>
+                        <div class="legend-item"><span class="legend-color fog-color"></span> Public Uncertainty (fog)
+                        </div>
+                    </div>
+                </div>
+                <div class="choice-panel">
+                    <h4>Turn <span id="current-turn">1</span>: Choose your approach</h4>
+                    <div class="choices">
+                        <button class="choice-btn" id="reassure-btn">
+                            <span class="choice-icon">😌</span>
+                            <span class="choice-title">"Stay Calm"</span>
+                            <span class="choice-effect">Trust +5 | Fog remains</span>
+                        </button>
+                        <button class="choice-btn" id="warn-btn">
+                            <span class="choice-icon">📢</span>
+                            <span class="choice-title">"Warn & Empower"</span>
+                            <span class="choice-effect">Trust −15 | Fog clears, community digs in</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 4 Debrief -->
+        <section class="debrief-section" id="act4-debrief" style="display: none;">
+            <div class="debrief-content">
+                <h3>The Myth of Mass Panic</h3>
+                <p id="act4-result"></p>
+                <p>
+                    Disaster researchers have consistently found that <strong>panic is rare</strong>.
+                    The real danger isn't that people will panic—it's that they won't be prepared.
+                </p>
+                <blockquote>
+                    "The 'myth of mass panic' assumes transparency causes chaos.
+                    Research shows the opposite: informed communities self-organize.
+                    Hiding risk prevents adaptation."
+                    <cite>— Based on Quarantelli's disaster research</cite>
+                </blockquote>
+                <p>
+                    When you warned people, they <em>dug in</em>—literally deepening their own valleys,
+                    building resilience from the bottom up. The short-term trust hit
+                    was worth the long-term survival.
+                </p>
+                <button class="continue-btn" id="continue-to-act5">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Act 5: The Governor -->
+        <section class="act-section" id="act5" style="display: none;">
+            <h2>Act 5: The Governor</h2>
+            <div class="act-content">
+                <p class="instruction">
+                    You have <strong>50 Resilience Points</strong> to prepare your city for an uncertain future.
+                    Survive 3 crisis rounds.
+                </p>
+                <div class="simulation-container governor-sim">
+                    <canvas id="act5-canvas"></canvas>
+                    <div class="budget-panel">
+                        <div class="budget-display">
+                            <span class="budget-icon">💰</span>
+                            <span class="budget-label">Resilience Points:</span>
+                            <span class="budget-value" id="rp-value">50</span>
+                        </div>
+                        <div class="round-display">
+                            <span class="round-icon">🌀</span>
+                            <span class="round-label">Crisis Round:</span>
+                            <span class="round-value" id="round-value">Preparation</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-panel">
+                    <h4>Choose an action:</h4>
+                    <div class="actions">
+                        <button class="action-btn" data-action="deepen" data-cost="3">
+                            <span class="action-icon">⛏️</span>
+                            <span class="action-name">Deepen</span>
+                            <span class="action-cost">−3 RP</span>
+                            <span class="action-desc">Make current valley more stable</span>
+                        </button>
+                        <button class="action-btn" data-action="widen" data-cost="5">
+                            <span class="action-icon">↔️</span>
+                            <span class="action-name">Widen</span>
+                            <span class="action-cost">−5 RP</span>
+                            <span class="action-desc">Expand valley to tolerate lateral shocks</span>
+                        </button>
+                        <button class="action-btn" data-action="scout" data-cost="2">
+                            <span class="action-icon">🔍</span>
+                            <span class="action-name">Scout</span>
+                            <span class="action-cost">−2 RP</span>
+                            <span class="action-desc">Reveal one foggy hex</span>
+                        </button>
+                        <button class="action-btn" data-action="barrier" data-cost="8">
+                            <span class="action-icon">🧱</span>
+                            <span class="action-name">Barrier</span>
+                            <span class="action-cost">−8 RP</span>
+                            <span class="action-desc">Block path to ruin</span>
+                        </button>
+                    </div>
+                    <button class="ready-btn" id="ready-btn">Ready for Crisis →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 5 Debrief / Final -->
+        <section class="debrief-section" id="final-debrief" style="display: none;">
+            <div class="debrief-content">
+                <h3>Final Assessment</h3>
+                <div id="final-diagnosis"></div>
+
+                <h3>What You've Learned</h3>
+                <ul class="final-learnings">
+                    <li><strong>Hysteresis:</strong> It's easier to fall than to climb out</li>
+                    <li><strong>N-Tipping:</strong> Random shocks can topple stable systems</li>
+                    <li><strong>B-Tipping:</strong> Gradual erosion makes systems fragile</li>
+                    <li><strong>Early Warning Signals:</strong> Wobble and slow recovery predict tipping</li>
+                    <li><strong>Transparency:</strong> Informed communities self-organize and adapt</li>
+                    <li><strong>Balance:</strong> Resilience requires both depth and flexibility</li>
+                </ul>
+
+                <blockquote class="final-quote">
+                    "The goal isn't to predict the future—it's to build systems
+                    that can handle the futures we can't predict."
+                </blockquote>
+
+                <div class="credits">
+                    <p>
+                        Based on research by Matti T.J. Heino and colleagues on
+                        <a href="#">attractor landscapes</a> and
+                        <a href="#">resilience under uncertainty</a>.
+                    </p>
+                    <p>
+                        Inspired by <a href="https://ncase.me">Nicky Case's</a> explorable explanations.
+                    </p>
+                </div>
+
+                <button class="restart-btn" id="restart-btn">↻ Start Over</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/hexGrid.js"></script>
+    <script src="js/ball.js"></script>
+    <script src="js/fog.js"></script>
+    <script src="js/acts/act1-trap.js"></script>
+    <script src="js/acts/act2-tipping.js"></script>
+    <script src="js/acts/act3-wobble.js"></script>
+    <script src="js/acts/act4-panic.js"></script>
+    <script src="js/acts/act5-governor.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
