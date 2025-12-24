@@ -8,7 +8,7 @@
         content="An interactive explorable teaching how complex systems fail—using attractor dynamics, tipping points, and early warning signals.">
 
     <title>Resilience Landscapes</title>
-
+    <link rel="icon" type="image/png" href="favicon.png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,19 +23,32 @@
         <!-- Title Section -->
         <header class="title-section">
             <h1>Resilience Landscapes</h1>
-            <p class="subtitle">An interactive explorable explanation of how complex systems fail and how they're navigated</p>
+            <p class="subtitle">An interactive explorable explanation of how complex systems fail and how they're
+                navigated</p>
         </header>
 
         <!-- Introduction -->
         <section class="narrative-section" id="intro">
             <p>
-                Complex systems science offers a powerful conceptual tool to map transition dynamics: the attractor landscape. Imagine a pool table with a single billiard ball. Each position on the table represents a possible state for the system, and the current status is represented by the location of the billiard ball. Now imagine the surface isn’t flat, but contains hills and valleys. The valleys represent stable patterns – the attractors, collections of similar states that “trap” the ball. It’s easy for the ball to settle into a valley; it requires more effort or perturbation to push it out. The ridges between valleys are called <strong>tipping points</strong>. And sometimes, hidden in the fog, there are cliffs that lead to state of permanent destruction; <strong>ruin</strong>.
-            </p>
-			<p>
-                Perhaps your couch is an attractor for you. Maybe a new exercise regime is the opposite; an unsteady state, repellor, that's hard to maintain.
+                Complex systems science offers a powerful conceptual tool to map transition dynamics: the attractor
+                landscape. Imagine a pool table with a single billiard ball. Each position on the table represents a
+                possible state for the system, and the current status is represented by the location of the billiard
+                ball. Now imagine the surface isn’t flat, but contains hills and valleys. The valleys represent stable
+                patterns – the attractors, collections of similar states that “trap” the ball. It’s easy for the ball to
+                settle into a valley; it requires more effort or perturbation to push it out. The ridges between valleys
+                are called <strong>tipping points</strong>. And sometimes, hidden in the fog, there are cliffs that lead
+                to state of permanent destruction; <strong>ruin</strong>.
             </p>
             <p>
-                Thinking in terms of attractor landscapes can take your thinking past flowcharts suggesting neat, linear causes and effects. It shifts focus towards understanding the system’s dispositions, its underlying tendencies and stabilities. It encourages a focus on nurturing the conditions, tending the substrate, working the soil, from which desired behaviours – in deeper, more stable valleys – can emerge, and sustain themselves more naturally.
+                Perhaps your couch is an attractor for you. Maybe a new exercise regime is the opposite; an unsteady
+                state, repellor, that's hard to maintain.
+            </p>
+            <p>
+                Thinking in terms of attractor landscapes can take your thinking past flowcharts suggesting neat, linear
+                causes and effects. It shifts focus towards understanding the system’s dispositions, its underlying
+                tendencies and stabilities. It encourages a focus on nurturing the conditions, tending the substrate,
+                working the soil, from which desired behaviours – in deeper, more stable valleys – can emerge, and
+                sustain themselves more naturally.
             </p>
             <p>
                 We should explore this.
@@ -97,11 +110,16 @@
                     Residents leave. Property values drop. Getting a new store?
                     That requires <em>reversing</em> a downward spiral – far harder than the initial decline.
                 </p>
-				<p>
-                    It is rarely a single thing that causes anything in human systems, but rather often a combination of factors that only become known after the fact. This is captured in the sayings "Everything is obvious, once you know the answer", as well as "It's tough to make predictions, especially about the future." 
+                <p>
+                    It is rarely a single thing that causes anything in human systems, but rather often a combination of
+                    factors that only become known after the fact. This is captured in the sayings "Everything is
+                    obvious, once you know the answer", as well as "It's tough to make predictions, especially about the
+                    future."
                 </p>
-				<p>
-                    Notice that by moving the ball to the adjacent tiles, you did something very important. You took steps to the "adjacent possible" state; a place you could get from where you currently were. This will be explored as we move further. 
+                <p>
+                    Notice that by moving the ball to the adjacent tiles, you did something very important. You took
+                    steps to the "adjacent possible" state; a place you could get from where you currently were. This
+                    will be explored as we move further.
                 </p>
                 <button class="continue-btn" id="continue-to-intermission">Continue →</button>
             </div>
@@ -116,6 +134,7 @@
                 </p>
 
                 <form name="act1-feedback" data-netlify="true" class="feedback-form" style="margin: 2rem 0;">
+                    <input type="hidden" name="form-name" value="act1-feedback" />
                     <textarea name="feedback" id="user-feedback" placeholder="Share your thoughts here..."
                         style="width: 100%; min-height: 120px; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
                     <button type="submit" class="continue-btn" id="send-feedback-btn">Share Thoughts</button>
