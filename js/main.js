@@ -176,6 +176,18 @@ class ResilienceLandscapesApp {
 
         this.act1.onComplete = (data) => {
             console.log('Act 1 complete:', data);
+
+            // Track attempts in localStorage
+            let attempts = parseInt(localStorage.getItem('act1_attempts') || '0');
+            attempts++;
+            localStorage.setItem('act1_attempts', attempts);
+
+            // Populate hidden form fields for Netlify
+            const attemptsField = document.getElementById('stats-attempts');
+            const nudgesOutField = document.getElementById('stats-nudges-out');
+
+            if (attemptsField) attemptsField.value = attempts;
+            if (nudgesOutField) nudgesOutField.value = data.nudgesOut || 0;
         };
     }
 
