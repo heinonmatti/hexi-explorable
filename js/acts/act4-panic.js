@@ -45,11 +45,13 @@ class Act4Panic {
         this.ctx = this.canvas.getContext('2d');
 
         // Create grid
-        this.grid = new HexGrid(7, 5, 40);
+        const isMobile = window.innerWidth < 650;
+        const hexSize = isMobile ? 55 : 40;
+        this.grid = new HexGrid(7, 5, hexSize);
 
         // Set canvas size
         const dims = this.grid.getCanvasDimensions();
-        this.canvas.width = dims.width;
+        this.canvas.width = isMobile ? Math.min(window.innerWidth - 40, dims.width) : dims.width;
         this.canvas.height = dims.height;
 
         // Set up landscape

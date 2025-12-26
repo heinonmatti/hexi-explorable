@@ -66,11 +66,13 @@ class Act1Trap {
         this.ctx = this.canvas.getContext('2d');
 
         // Create larger grid for expansive feel
-        this.grid = new HexGrid(15, 11, 35); // Slightly larger hexagons too
+        const isMobile = window.innerWidth < 650;
+        const hexSize = isMobile ? 45 : 35;
+        this.grid = new HexGrid(15, 11, hexSize);
 
-        // Set canvas size to a fixed viewport window
-        this.canvas.width = 650;
-        this.canvas.height = 450;
+        // Handle mobile sizing for better touch targets
+        this.canvas.width = isMobile ? Math.min(window.innerWidth - 40, 450) : 650;
+        this.canvas.height = isMobile ? Math.min(window.innerHeight * 0.6, 500) : 450;
 
         // Build the landscape with a pre-made valley
         this._buildLandscape();
@@ -152,10 +154,58 @@ class Act1Trap {
 
             // Convert click to world coordinates using camera offset
             this._handleHexClick(x + this.viewOffset.x, y + this.viewOffset.y);
+
+            // For mobile/touch: maintain the highlight briefly so they see where they tapped
+            const hex = this.grid.getHexAtPixel(x + this.viewOffset.x, y + this.viewOffset.y);
+            if (hex) {
+                this._highlightHexBriefly(hex);
+            }
         };
 
+        const handleDown = (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            let x, y;
+
+            if (e.touches) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+
+            x *= this.canvas.width / rect.width;
+            y *= this.canvas.height / rect.height;
+
+            const hex = this.grid.getHexAtPixel(x + this.viewOffset.x, y + this.viewOffset.y);
+            if (hex) {
+                // Clear previous highlights
+                for (const cell of this.grid.getAllCells()) {
+                    cell.isHighlighted = false;
+                    cell.isLegalMove = false;
+                }
+
+                hex.isHighlighted = true;
+                const currentHex = this.ball.getCurrentHex();
+                if (currentHex && (hex.col !== currentHex.col || hex.row !== currentHex.row)) {
+                    const neighbors = this.grid.getNeighbors(currentHex.col, currentHex.row);
+                    const isNeighbor = neighbors.some(n => n.col === hex.col && n.row === hex.row);
+                    if (isNeighbor) {
+                        hex.isLegalMove = true;
+                    }
+                }
+            }
+        };
+
+        this.canvas.addEventListener('mousedown', handleDown);
+        this.canvas.addEventListener('touchstart', (e) => {
+            // e.preventDefault(); // Don't prevent default here as we want click to fire too
+            handleDown(e);
+        });
+
         this.canvas.addEventListener('click', handleClick);
-        this.canvas.addEventListener('touchstart', handleClick);
+        // touchstart is already handled by click behavior usually, 
+        // but we want the 'down' feedback immediately.
 
         // Hover highlight
         this.canvas.addEventListener('mousemove', (e) => {
@@ -405,6 +455,19 @@ class Act1Trap {
                 ratio: this.nudgesOut / Math.max(1, this.nudgesIn)
             });
         }
+    }
+
+    _highlightHexBriefly(hex) {
+        hex.isHighlighted = true;
+
+        // Remove existing timeout if any
+        if (this.highlightTimeout) {
+            clearTimeout(this.highlightTimeout);
+        }
+
+        this.highlightTimeout = setTimeout(() => {
+            hex.isHighlighted = false;
+        }, 600);
     }
 
     _showPhaseInstructions(phase) {

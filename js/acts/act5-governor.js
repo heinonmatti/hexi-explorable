@@ -69,11 +69,13 @@ class Act5Governor {
         this.ctx = this.canvas.getContext('2d');
 
         // Create larger grid
-        this.grid = new HexGrid(9, 6, 35);
+        const isMobile = window.innerWidth < 650;
+        const hexSize = isMobile ? 45 : 35;
+        this.grid = new HexGrid(9, 6, hexSize);
 
         // Set canvas size
         const dims = this.grid.getCanvasDimensions();
-        this.canvas.width = dims.width;
+        this.canvas.width = isMobile ? Math.min(window.innerWidth - 40, dims.width) : dims.width;
         this.canvas.height = dims.height;
 
         // Set up landscape
@@ -155,14 +157,55 @@ class Act5Governor {
         }
 
         // Canvas clicks for hex selection
-        this.canvas.addEventListener('click', (e) => {
+        const handleSelection = (e) => {
             if (!this.awaitingHexSelection) return;
 
             const rect = this.canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
-            const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+            let x, y;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+
+            x *= this.canvas.width / rect.width;
+            y *= this.canvas.height / rect.height;
 
             this._handleHexSelection(x, y);
+        };
+
+        const handleDown = (e) => {
+            if (!this.awaitingHexSelection) return;
+
+            const rect = this.canvas.getBoundingClientRect();
+            let x, y;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+
+            x *= this.canvas.width / rect.width;
+            y *= this.canvas.height / rect.height;
+
+            const hex = this.grid.getHexAtPixel(x, y);
+            if (hex) {
+                // Clear all highlights
+                for (const cell of this.grid.getAllCells()) {
+                    cell.isHighlighted = false;
+                }
+                hex.isHighlighted = true;
+            }
+        };
+
+        this.canvas.addEventListener('click', handleSelection);
+        this.canvas.addEventListener('mousedown', handleDown);
+        this.canvas.addEventListener('touchstart', (e) => {
+            handleDown(e);
         });
 
         // Hover for hex highlight

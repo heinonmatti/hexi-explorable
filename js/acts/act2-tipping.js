@@ -62,11 +62,13 @@ class Act2Tipping {
         this.ctxA = this.canvasA.getContext('2d');
 
         // Create grid
-        this.gridA = new HexGrid(5, 4, 35);
+        const isMobile = window.innerWidth < 650;
+        const hexSize = isMobile ? 45 : 35;
+        this.gridA = new HexGrid(5, 4, hexSize);
 
         // Set canvas size
         const dims = this.gridA.getCanvasDimensions();
-        this.canvasA.width = dims.width;
+        this.canvasA.width = isMobile ? Math.min(window.innerWidth - 60, dims.width) : dims.width;
         this.canvasA.height = dims.height;
 
         // Create a valley with the ball
@@ -87,11 +89,13 @@ class Act2Tipping {
         this.ctxB = this.canvasB.getContext('2d');
 
         // Create grid
-        this.gridB = new HexGrid(5, 4, 35);
+        const isMobile = window.innerWidth < 650;
+        const hexSize = isMobile ? 45 : 35;
+        this.gridB = new HexGrid(5, 4, hexSize);
 
         // Set canvas size
         const dims = this.gridB.getCanvasDimensions();
-        this.canvasB.width = dims.width;
+        this.canvasB.width = isMobile ? Math.min(window.innerWidth - 60, dims.width) : dims.width;
         this.canvasB.height = dims.height;
 
         // Create a valley with the ball
