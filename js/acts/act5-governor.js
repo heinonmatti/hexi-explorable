@@ -268,6 +268,9 @@ class Act5Governor {
                     this.grid.modifyElevation(hex.q, hex.r, -1);
                     this.resiliencePoints -= cost;
                     this.actionsUsed.deepen++;
+                } else {
+                    this._showErrorBriefly(hex);
+                    return;
                 }
                 break;
 
@@ -281,6 +284,9 @@ class Act5Governor {
                     });
                     this.resiliencePoints -= cost;
                     this.actionsUsed.widen++;
+                } else {
+                    this._showErrorBriefly(hex);
+                    return;
                 }
                 break;
 
@@ -295,6 +301,9 @@ class Act5Governor {
                     this.grid.modifyElevation(hex.q, hex.r, 2);
                     this.resiliencePoints -= cost;
                     this.actionsUsed.barrier++;
+                } else {
+                    this._showErrorBriefly(hex);
+                    return;
                 }
                 break;
         }
@@ -472,6 +481,13 @@ class Act5Governor {
                 rpRemaining: this.resiliencePoints
             });
         }
+    }
+
+    _showErrorBriefly(hex) {
+        hex.isError = true;
+        setTimeout(() => {
+            hex.isError = false;
+        }, 500);
     }
 
     /**

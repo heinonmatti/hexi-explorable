@@ -253,14 +253,16 @@ class Act1Trap {
         const currentHex = this.ball.getCurrentHex();
         if (!currentHex) return;
 
+        if (hex.col === currentHex.col && hex.row === currentHex.row) return;
+
         // Must click an ADJACENT hex
         const neighbors = this.grid.getNeighbors(currentHex.col, currentHex.row);
         const isNeighbor = neighbors.some(n => n.col === hex.col && n.row === hex.row);
 
-        if (!isNeighbor) return;
-
-        // If clicking the hex we are already in, ignore
-        if (hex.col === currentHex.col && hex.row === currentHex.row) return;
+        if (!isNeighbor) {
+            this._showErrorBriefly(hex);
+            return;
+        }
 
         // Mechanic: Transient Stability
         const isUphill = hex.elevation > currentHex.elevation;
@@ -470,6 +472,13 @@ class Act1Trap {
         }, 600);
     }
 
+    _showErrorBriefly(hex) {
+        hex.isError = true;
+        setTimeout(() => {
+            hex.isError = false;
+        }, 500);
+    }
+
     _showPhaseInstructions(phase) {
         const phase1El = document.getElementById('phase1-instructions');
         const phase2El = document.getElementById('phase2-instructions');
@@ -526,14 +535,34 @@ class Act1Trap {
 
         // Draw phase indicator
         if (!this.isComplete) {
-            this.ctx.font = 'bold 14px "Work Sans", sans-serif';
-            this.ctx.fillStyle = this.phase === 1 ? '#4db6ac' : '#ef6c00';
-            this.ctx.textAlign = 'left';
-
+            const margin = 10;
             const text = this.phase === 1
                 ? 'Phase 1: Click an adjacent tile to move ball INTO the valley'
                 : 'Phase 2: Click an adjacent tile to move OUT';
-            this.ctx.fillText(text, 10, this.canvas.height - 10);
+
+            this.ctx.font = 'bold 16px "Work Sans", sans-serif';
+            const metrics = this.ctx.measureText(text);
+            const padding = 10;
+            const bgHeight = 30;
+            const bgWidth = metrics.width + (padding * 2);
+
+            // Draw pill background
+            this.ctx.save();
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            this.ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            this.ctx.shadowBlur = 4;
+            this.ctx.beginPath();
+            const rectX = margin;
+            const rectY = this.canvas.height - margin - bgHeight;
+            this.ctx.roundRect(rectX, rectY, bgWidth, bgHeight, 15);
+            this.ctx.fill();
+            this.ctx.restore();
+
+            // Draw text
+            this.ctx.fillStyle = this.phase === 1 ? '#00796b' : '#d84315'; // Darker teal/vermilion
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(text, rectX + padding, rectY + bgHeight / 2);
 
             // Visual feedback for transient stability
             if (this.isTransient && this.transientTimer > 0) {

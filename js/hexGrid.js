@@ -23,6 +23,7 @@ class HexCell {
         this.isRevealed = true;
         this.isHighlighted = false;
         this.isLegalMove = false;
+        this.isError = false;
     }
 
     get key() {
@@ -271,15 +272,32 @@ class HexGrid {
         ctx.fillStyle = this.getElevationColor(cell);
         ctx.fill();
 
-        // Standard border
-        ctx.strokeStyle = 'rgba(50,50,50,0.15)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Highlight/Legal move feedback
+        // Highlight/Legal move feedback (Saturation for legal, Contrast for illegal)
         if (cell.isHighlighted) {
-            ctx.strokeStyle = cell.isLegalMove ? '#ef6c00' : '#adb5bd';
-            ctx.lineWidth = 3;
+            if (cell.isLegalMove) {
+                // "High Saturation": We draw a saturated version of the base color
+                ctx.save();
+                ctx.filter = 'saturate(350%) brightness(1.1)';
+                ctx.fillStyle = this.getElevationColor(cell);
+                ctx.fill();
+                ctx.restore();
+
+                // Softer dark border
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            } else {
+                // "Low Contrast": Wash out with high-opacity white
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(150, 150, 150, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        } else {
+            // Standard border for non-highlighted cells
+            ctx.strokeStyle = 'rgba(50,50,50,0.15)';
+            ctx.lineWidth = 1;
             ctx.stroke();
         }
 
@@ -319,6 +337,24 @@ class HexGrid {
         if (!cell.isRevealed) {
             ctx.fillStyle = 'rgba(180,180,200,0.85)';
             ctx.fill();
+        }
+
+        // Error Feedback (red X) - Smaller size
+        if (cell.isError) {
+            const size = this.sideLength * 0.2;
+            ctx.strokeStyle = '#E84855';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(x + this.hexRadius - size, y + this.hexHeight + this.sideLength / 2 - size);
+            ctx.lineTo(x + this.hexRadius + size, y + this.hexHeight + this.sideLength / 2 + size);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + this.hexRadius + size, y + this.hexHeight + this.sideLength / 2 - size);
+            ctx.lineTo(x + this.hexRadius - size, y + this.hexHeight + this.sideLength / 2 + size);
+            ctx.stroke();
         }
     }
 
