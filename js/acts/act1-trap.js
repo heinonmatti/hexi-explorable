@@ -80,11 +80,11 @@ class Act1Trap {
         // Create ball and enable discrete mode
         const startCol = 10;
         const startRow = 5;
-        this.ball = new Ball(this.grid, startCol, startRow);
+        const startPx = this.grid.hexToPixel(startCol, startRow);
+        this.ball = new Ball(this.grid, startPx.x, startPx.y);
         this.ball.isDiscreteMode = true;
 
         // Initialize camera to center on ball
-        const startPx = this.grid.hexToPixel(startCol, startRow);
         this.viewOffset.x = startPx.x - this.canvas.width / 2;
         this.viewOffset.y = startPx.y - this.canvas.height / 2;
         this.targetViewOffset.x = this.viewOffset.x;

@@ -10,30 +10,38 @@
     --text-primary: #1A1A2E;
     --text-secondary: #4A4A68;
     --text-muted: #8888A0;
-    
+
     /* Colors - Elevation Gradient (valleys to ridges) */
-    --elevation-deep: #1E3A5F;      /* -3: Deep valley */
-    --elevation-medium: #2E86AB;    /* -2: Medium valley */
-    --elevation-shallow: #45B7A0;   /* -1: Shallow valley */
-    --elevation-neutral: #A0A0A0;   /*  0: Neutral */
-    --elevation-low-ridge: #E8A838; /* +1: Low ridge */
-    --elevation-medium-ridge: #E07B39; /* +2: Medium ridge */
-    --elevation-high-ridge: #E84855; /* +3: High ridge */
-    --elevation-ruin: #0D0D1A;      /* Ruin state */
-    
+    --elevation-deep: #1E3A5F;
+    /* -3: Deep valley */
+    --elevation-medium: #2E86AB;
+    /* -2: Medium valley */
+    --elevation-shallow: #45B7A0;
+    /* -1: Shallow valley */
+    --elevation-neutral: #A0A0A0;
+    /*  0: Neutral */
+    --elevation-low-ridge: #E8A838;
+    /* +1: Low ridge */
+    --elevation-medium-ridge: #E07B39;
+    /* +2: Medium ridge */
+    --elevation-high-ridge: #E84855;
+    /* +3: High ridge */
+    --elevation-ruin: #0D0D1A;
+    /* Ruin state */
+
     /* Colors - Semantic */
     --accent-primary: #4A90D9;
     --accent-success: #45B7A0;
     --accent-warning: #E8A838;
     --accent-danger: #E84855;
     --fog-color: rgba(200, 200, 220, 0.7);
-    
+
     /* Colors - UI Elements */
     --button-primary: #4A90D9;
     --button-primary-hover: #3A7BC8;
     --button-secondary: #E0E0E0;
     --button-danger: #E84855;
-    
+
     /* Typography */
     --font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-size-base: 18px;
@@ -44,7 +52,7 @@
     --font-size-h3: 1.4rem;
     --line-height-base: 1.65;
     --line-height-tight: 1.3;
-    
+
     /* Spacing */
     --space-xs: 0.25rem;
     --space-sm: 0.5rem;
@@ -53,21 +61,21 @@
     --space-xl: 2rem;
     --space-2xl: 3rem;
     --space-3xl: 4rem;
-    
+
     /* Layout */
     --max-width: 800px;
     --hex-size: 50px;
-    
+
     /* Transitions */
     --transition-fast: 150ms ease;
     --transition-medium: 300ms ease;
     --transition-slow: 500ms ease;
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-    
+
     /* Border Radius */
     --radius-sm: 4px;
     --radius-md: 8px;
@@ -75,11 +83,24 @@
     --radius-full: 50%;
 }
 
+/* Honeypot field - hidden from humans, accessible to bots */
+.ohnohoney {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 0;
+    width: 0;
+    z-index: -1;
+}
+
 /* ========================================
    BASE STYLES
    ======================================== */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
@@ -119,7 +140,9 @@ body {
    TYPOGRAPHY
    ======================================== */
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     line-height: var(--line-height-tight);
     margin-top: 0;
     font-weight: 600;
@@ -173,7 +196,8 @@ blockquote cite {
     color: var(--text-muted);
 }
 
-ul, ol {
+ul,
+ol {
     margin-top: 0;
     margin-bottom: var(--space-lg);
     padding-left: var(--space-xl);
@@ -221,7 +245,8 @@ a:hover {
    NARRATIVE SECTIONS
    ======================================== */
 
-.narrative-section {
+.act-section {
+    position: relative;
     margin-bottom: var(--space-3xl);
 }
 
@@ -299,6 +324,30 @@ button:disabled {
     transform: translateY(0);
 }
 
+/* Navigation buttons for jumping between acts */
+.nav-link-btn {
+    padding: 0.5rem 1rem;
+    background: white;
+    color: var(--text-primary);
+    border: 1px solid #ddd;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.nav-link-btn:hover {
+    background: var(--accent-success);
+    color: white;
+    border-color: var(--accent-success);
+    transform: translateY(-1px);
+}
+
+.nav-link-btn:active {
+    transform: translateY(0);
+}
+
 /* ========================================
    ACT SECTIONS
    ======================================== */
@@ -309,8 +358,15 @@ button:disabled {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .act-content {
@@ -344,7 +400,8 @@ canvas {
     border-radius: var(--radius-md);
     background: white;
     box-shadow: var(--shadow-sm);
-    touch-action: none; /* Prevent default touch behaviors */
+    touch-action: none;
+    /* Prevent default touch behaviors */
 }
 
 .controls {
@@ -454,8 +511,15 @@ canvas {
 }
 
 @keyframes tipReveal {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 #n-tip-label {
@@ -471,6 +535,7 @@ canvas {
 /* Slider Styles */
 input[type="range"] {
     -webkit-appearance: none;
+    appearance: none;
     width: 150px;
     height: 8px;
     background: #ddd;
@@ -706,12 +771,20 @@ input[type="range"]::-moz-range-thumb {
     width: 16px;
     height: 16px;
     border-radius: 4px;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.ball-color { background: var(--accent-primary); }
-.valley-color { background: var(--elevation-shallow); }
-.fog-color { background: var(--fog-color); }
+.ball-color {
+    background: var(--accent-primary);
+}
+
+.valley-color {
+    background: var(--elevation-shallow);
+}
+
+.fog-color {
+    background: var(--fog-color);
+}
 
 .choice-panel {
     background: var(--bg-secondary);
@@ -954,10 +1027,205 @@ input[type="range"]::-moz-range-thumb {
     body {
         background: white;
     }
-    
+
     .simulation-container,
     .controls,
     button {
         display: none;
     }
+}
+
+/* ========================================
+   ACT 2 NARRATIVE STYLES
+   ======================================== */
+
+.narrative-overlay {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    background: white;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-sizing: border-box;
+    transition: opacity var(--transition-medium);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.narrative-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+/* Hide Act 2 content while overlay is showing */
+#act2-narrative-overlay:not(.hidden)~.act-content {
+    display: none;
+}
+
+.screen {
+    display: none;
+    max-width: 600px;
+    width: 100%;
+    flex-direction: column;
+    gap: var(--space-lg);
+    animation: fadeIn var(--transition-medium);
+}
+
+.screen.active {
+    display: flex;
+}
+
+.screen h3 {
+    margin-top: 0;
+    color: var(--elevation-shallow);
+    font-size: var(--font-size-h2);
+}
+
+.screen p {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--text-secondary);
+}
+
+.input-group {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.input-group label {
+    font-weight: 600;
+    font-size: var(--font-size-small);
+    color: var(--text-primary);
+}
+
+.input-group input {
+    padding: var(--space-sm) var(--space-md);
+    border: 2px solid var(--bg-secondary);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    transition: border-color var(--transition-fast);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.val-system,
+.val-goal,
+.val-clicks {
+    font-weight: bold;
+    color: var(--elevation-shallow);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#act2-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-lg);
+}
+
+/* ========================================
+   QUIZ STYLES (Act 2)
+   ======================================== */
+
+.quiz-section {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.quiz-questions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+    margin: var(--space-lg) 0;
+}
+
+.quiz-question {
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: left;
+}
+
+.scenario {
+    font-weight: 500;
+    margin-bottom: var(--space-md);
+    font-size: var(--font-size-large);
+}
+
+.quiz-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+    background: var(--bg-primary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.quiz-btn:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    background: white;
+}
+
+.quiz-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.quiz-btn.correct {
+    background-color: rgba(69, 183, 160, 0.1);
+    border-color: var(--accent-success);
+    color: var(--accent-success);
+    font-weight: 600;
+}
+
+.quiz-btn.incorrect {
+    background-color: rgba(232, 72, 85, 0.1);
+    border-color: var(--accent-danger);
+    color: var(--accent-danger);
+}
+
+.feedback {
+    margin-top: var(--space-md);
+    font-weight: 500;
+    min-height: 1.5em;
+    /* Prevent layout jump */
+}
+
+.feedback.success {
+    color: var(--accent-success);
+}
+
+.feedback.error {
+    color: var(--accent-danger);
 }

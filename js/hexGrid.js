@@ -51,6 +51,15 @@ class HexGrid {
         const cell = this.getHex(col, row);
         if (!cell) return { x: 0, y: 0 };
 
+        // Check if it's a local minimum (settling point)
+        // If any neighbor has strictly lower elevation, don't apply centering force
+        const neighbors = this.getNeighbors(col, row);
+        for (const n of neighbors) {
+            if (n.elevation < cell.elevation - 0.05) { // Small epsilon
+                return { x: 0, y: 0 };
+            }
+        }
+
         const center = this.hexToPixel(col, row);
         const dx = center.x - ballX;
         const dy = center.y - ballY;
@@ -207,9 +216,27 @@ class HexGrid {
         return best;
     }
 
-    getHexAtPixel(x, y) {
+    getHexAtPixel(x, y, strict = false) {
         const coords = this.pixelToHex(x, y);
-        return this.getHex(coords.col, coords.row);
+        const cell = this.getHex(coords.col, coords.row);
+
+        if (!cell || !strict) return cell;
+
+        // Strict boundary check: is it actually inside this hex?
+        const center = this.hexToPixel(cell.col, cell.row);
+        const dx = Math.abs(x - center.x);
+        const dy = Math.abs(y - center.y);
+
+        // Pointy-top hex constraint (approximate but effective):
+        // 1. Within horizontal radius and vertical sideLength
+        if (dx > this.hexRadius || dy > this.sideLength) return null;
+        // 2. Within diagonal corners (approximate with dy < sideLength - dx * tan(30))
+        // sideLength is h, hexRadius is r. The slope of the top-right edge is (h/2)/r = 0.5 * sideLength / hexRadius
+        // But the Stack Overflow geometry used here defines sideLength as the straight edge.
+        // Let's use the standard pointy-top radius/height constraint.
+        if (this.sideLength - dy < dx * 0.577) return null;
+
+        return cell;
     }
 
     calculateGradient(col, row) {
@@ -241,8 +268,43 @@ class HexGrid {
 
     getElevationColor(cell) {
         if (cell.isRuin) return HexGrid.ELEVATION_COLORS['ruin'];
-        const e = Math.max(-3, Math.min(3, Math.round(cell.elevation)));
-        return HexGrid.ELEVATION_COLORS[e.toString()];
+
+        const elevation = Math.max(-3, Math.min(3, cell.elevation));
+
+        // Find the two discrete steps to interpolate between
+        const low = Math.floor(elevation);
+        const high = Math.min(3, low + 1);
+
+        if (low === high) return HexGrid.ELEVATION_COLORS[low.toString()];
+
+        const colorLow = HexGrid.ELEVATION_COLORS[low.toString()];
+        const colorHigh = HexGrid.ELEVATION_COLORS[high.toString()];
+
+        // Weight is the fractional part
+        const t = elevation - low;
+
+        return this._interpolateColors(colorLow, colorHigh, t);
+    }
+
+    /**
+     * Interpolate between two hex colors
+     */
+    _interpolateColors(hex1, hex2, t) {
+        const rgb1 = this._hexToRgb(hex1);
+        const rgb2 = this._hexToRgb(hex2);
+
+        const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
+        const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
+        const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
+
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    _hexToRgb(hex) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return { r, g, b };
     }
 
     /**

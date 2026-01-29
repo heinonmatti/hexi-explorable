@@ -1,38 +1,30 @@
 /**
- * Ball - Physics simulation for the ball rolling on the hex landscape
+ * Ball - Physics simulation for the ball rolling on the continuous landscape
  * 
  * The ball represents "system state" and moves according to the elevation
- * gradient of the hexagonal landscape. It rolls downhill toward lower
- * hexagons with momentum and friction.
- * 
- * Key behaviors:
- * - Moves toward lowest adjacent areas (potential field physics)
- * - Has momentum that decays over time (friction)
- * - Can receive random "noise" perturbations (for N-tipping demos)
- * - Tracks oscillation amplitude and recovery time (for early warning signals)
+ * gradient of the terrain.
  */
 
 class Ball {
     // Physics constants
-    static GRAVITY = 0.15;          // Force multiplier for gradient
-    static FRICTION = 0.92;         // Velocity decay per frame
-    static MAX_VELOCITY = 8;        // Speed limit
+    static GRAVITY = 0.5;           // Force multiplier for gradient (tuned for smooth terrain)
+    static FRICTION = 0.96;         // Velocity decay per frame (less friction for rolling)
+    static MAX_VELOCITY = 10;       // Speed limit
     static NOISE_SCALE = 0.5;       // Random perturbation multiplier
-    static TRAIL_LENGTH = 60;       // Number of positions to remember
+    static TRAIL_LENGTH = 100;      // Number of positions to remember
 
     /**
-     * @param {HexGrid} grid - The hex grid the ball moves on
-     * @param {number} startQ - Starting hex q coordinate
-     * @param {number} startR - Starting hex r coordinate
+     * @param {Terrain} terrain - The terrain the ball moves on
+     * @param {number} startX - Starting pixel X
+     * @param {number} startY - Starting pixel Y
      */
-    constructor(grid, startQ, startR) {
-        this.grid = grid;
+    constructor(terrain, startX, startY) {
+        this.grid = terrain; // Keeping property name 'grid' -> 'terrain' might be better but 'grid' breaks less code for now? 
+        // Let's rename to 'terrain' to be clean, and fix callsites later.
+        this.terrain = terrain;
 
-        // Get pixel position from hex coordinates
-        const startPos = grid.hexToPixel(startQ, startR);
-
-        this.x = startPos.x;
-        this.y = startPos.y;
+        this.x = startX;
+        this.y = startY;
         this.vx = 0;
         this.vy = 0;
 
@@ -41,91 +33,58 @@ class Ball {
         this.color = '#4A90D9';
         this.trailColor = 'rgba(74, 144, 217, 0.3)';
 
-        // Position history for trail and wobble detection
+        // Position history
         this.trail = [];
         this.positionHistory = [];
-        this.historyMaxLength = 120; // 2 seconds at 60fps
+        this.historyMaxLength = 120;
 
         // State
         this.isInRuin = false;
-        this.noiseLevel = 0; // 0 to 1
+        this.noiseLevel = 0;
 
-        // Metrics for early warning signals
+        // Metrics
         this.oscillationAmplitude = 0;
-        this.recoveryRate = 1; // 1 = fast recovery, 0 = slow (critical slowing)
+        this.recoveryRate = 1;
 
-        // For recovery rate calculation
+        // Recovery tracking
         this.lastPerturbationTime = 0;
-        this.equilibriumPosition = { x: startPos.x, y: startPos.y };
+        this.equilibriumPosition = { x: startX, y: startY };
         this.distanceFromEquilibrium = 0;
-
-        // Discrete movement properties (for Act 1 redesign)
-        this.isDiscreteMode = false;
-        this.targetX = null;
-        this.targetY = null;
-        this.moveDuration = 300; // ms for one step
-        this.moveStartTime = 0;
-        this.sourceX = 0;
-        this.sourceY = 0;
+        this.shimmerEnergy = 0; // Visual "vibration" energy [0...1]
     }
 
     /**
      * Update ball physics for one frame
-     * @param {number} dt - Delta time in milliseconds (typically ~16.67)
+     * @param {number} dt - Delta time in milliseconds
      */
     update(dt = 16.67) {
         if (this.isInRuin) return;
 
-        if (this.isDiscreteMode) {
-            this._updateDiscrete(dt);
-            this._updateTrail();
-            this._updateMetrics();
-            return;
-        }
+        // Discrete mode (used by Act 1 with HexGrid) doesn't use physics update
+        if (this.isDiscreteMode) return;
 
-        // Normalize dt to frames (assuming 60fps target)
+        // Guard: Ensure terrain has required methods (Terrain vs HexGrid)
+        if (!this.terrain || typeof this.terrain.getGradientAt !== 'function') return;
+
         const timeScale = dt / 16.67;
 
-        // Get current hex
-        const currentHex = this.grid.getHexAtPixel(this.x, this.y);
+        // 1. Get Gradient (Gravity) from Terrain
+        // The gradient vector points DOWNHILL
+        const gradient = this.terrain.getGradientAt(this.x, this.y);
 
-        if (!currentHex) {
-            // Ball is outside grid - apply centering force
-            this._applyCenteringForce();
-        } else {
-            // Check for ruin
-            if (currentHex.isRuin) {
-                this.isInRuin = true;
-                return;
-            }
+        this.vx += gradient.x * Ball.GRAVITY * timeScale;
+        this.vy += gradient.y * Ball.GRAVITY * timeScale;
 
-            // Calculate gradient force (rolls downhill)
-            const gradient = this.grid.calculateGradient(currentHex.col, currentHex.row);
-
-            // Apply gravity along gradient
-            this.vx += gradient.x * Ball.GRAVITY * timeScale;
-            this.vy += gradient.y * Ball.GRAVITY * timeScale;
-
-            // Apply hex centering force (to settle in center of tiles)
-            // Only apply if moving slowly, to allow natural rolls on slopes
-            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-            if (speed < 1.5) {
-                const centering = this.grid.getCenteringForce(currentHex.col, currentHex.row, this.x, this.y);
-                this.vx += centering.x * 2.0 * timeScale;
-                this.vy += centering.y * 2.0 * timeScale;
-            }
-        }
-
-        // Apply random noise (for N-tipping simulations)
+        // 2. Apply Noise
         if (this.noiseLevel > 0) {
             this._applyNoise(timeScale);
         }
 
-        // Apply friction
+        // 3. Apply Friction
         this.vx *= Math.pow(Ball.FRICTION, timeScale);
         this.vy *= Math.pow(Ball.FRICTION, timeScale);
 
-        // Clamp velocity
+        // 4. Clamp Velocity
         const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         if (speed > Ball.MAX_VELOCITY) {
             const scale = Ball.MAX_VELOCITY / speed;
@@ -133,101 +92,51 @@ class Ball {
             this.vy *= scale;
         }
 
-        // Update position
-        this.x += this.vx * timeScale;
-        this.y += this.vy * timeScale;
+        // 5. Update Position
+        let nextX = this.x + this.vx * timeScale;
+        let nextY = this.y + this.vy * timeScale;
 
-        // Update trail
+        // 6. Boundary collision (Canvas edges)
+        // Simple bounce
+        const w = this.terrain.width;
+        const h = this.terrain.height;
+        const r = this.radius;
+
+        if (nextX < r) { nextX = r; this.vx *= -0.5; }
+        if (nextX > w - r) { nextX = w - r; this.vx *= -0.5; }
+        if (nextY < r) { nextY = r; this.vy *= -0.5; }
+        if (nextY > h - r) { nextY = h - r; this.vy *= -0.5; }
+
+        this.x = nextX;
+        this.y = nextY;
+
+        // 7. Update Trail, Metrics & Shimmer
         this._updateTrail();
-
-        // Update metrics
         this._updateMetrics();
-    }
 
-    /**
-     * Handle discrete linear movement
-     */
-    _updateDiscrete(dt) {
-        if (this.targetX === null || this.targetY === null) return;
-
-        const now = Date.now();
-        const elapsed = now - this.moveStartTime;
-        const t = Math.min(1, elapsed / this.moveDuration);
-
-        // Simple ease-in-out
-        const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-
-        this.x = this.sourceX + (this.targetX - this.sourceX) * easedT;
-        this.y = this.sourceY + (this.targetY - this.sourceY) * easedT;
-
-        if (t >= 1) {
-            this.x = this.targetX;
-            this.y = this.targetY;
-            this.targetX = null;
-            this.targetY = null;
-            this.vx = 0;
-            this.vy = 0;
+        // Decay shimmer
+        if (this.shimmerEnergy > 0) {
+            this.shimmerEnergy -= 0.05 * timeScale;
+            if (this.shimmerEnergy < 0) this.shimmerEnergy = 0;
         }
     }
 
     /**
-     * Move smoothly to a specific hex center
-     */
-    moveTo(col, row, duration = 300) {
-        const pos = this.grid.hexToPixel(col, row);
-        this.sourceX = this.x;
-        this.sourceY = this.y;
-        this.targetX = pos.x;
-        this.targetY = pos.y;
-        this.moveDuration = duration;
-        this.moveStartTime = Date.now();
-        this.isMoving = true;
-    }
-
-    /**
-     * Is the ball currently moving in discrete mode?
-     */
-    isMovingDiscrete() {
-        return this.targetX !== null;
-    }
-
-    /**
-     * Apply random perturbation based on noise level
+     * Apply random perturbation
      */
     _applyNoise(timeScale) {
-        // Chance of a perturbation depends on noise level
         if (Math.random() < this.noiseLevel * 0.1) {
             const angle = Math.random() * Math.PI * 2;
             const magnitude = this.noiseLevel * Ball.NOISE_SCALE * (0.5 + Math.random() * 0.5);
-
-            this.vx += Math.cos(angle) * magnitude * 10;
-            this.vy += Math.sin(angle) * magnitude * 10;
-
+            this.vx += Math.cos(angle) * magnitude * 5;
+            this.vy += Math.sin(angle) * magnitude * 5;
             this.lastPerturbationTime = Date.now();
+            this.shimmerEnergy = 1.0; // Trigger vibration pulse
         }
     }
 
     /**
-     * Apply force to keep ball on grid
-     */
-    _applyCenteringForce() {
-        // Get center of grid
-        const dims = this.grid.getCanvasDimensions();
-        const centerX = dims.width / 2;
-        const centerY = dims.height / 2;
-
-        const dx = centerX - this.x;
-        const dy = centerY - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist > 0) {
-            this.vx += (dx / dist) * 0.5;
-            this.vy += (dy / dist) * 0.5;
-        }
-    }
-
-    /**
-     * Update position trail for visual effect
+     * Update position trail
      */
     _updateTrail() {
         this.trail.push({ x: this.x, y: this.y });
@@ -235,82 +144,58 @@ class Ball {
             this.trail.shift();
         }
 
-        // Also update position history for metrics
-        this.positionHistory.push({
-            x: this.x,
-            y: this.y,
-            time: Date.now()
-        });
+        this.positionHistory.push({ x: this.x, y: this.y, time: Date.now() });
         if (this.positionHistory.length > this.historyMaxLength) {
             this.positionHistory.shift();
         }
     }
 
     /**
-     * Update oscillation and recovery metrics
-     * These are the "early warning signals" for tipping
+     * Update oscillation metrics
      */
     _updateMetrics() {
         if (this.positionHistory.length < 30) return;
 
-        // Calculate oscillation amplitude (variance of position)
-        const recentPositions = this.positionHistory.slice(-30);
-
-        // Find mean position
+        // Variance / Amplitude
         let meanX = 0, meanY = 0;
-        for (const pos of recentPositions) {
-            meanX += pos.x;
-            meanY += pos.y;
-        }
-        meanX /= recentPositions.length;
-        meanY /= recentPositions.length;
+        const recent = this.positionHistory.slice(-30);
+        for (const p of recent) { meanX += p.x; meanY += p.y; }
+        meanX /= recent.length;
+        meanY /= recent.length;
 
-        // Calculate variance (oscillation amplitude)
         let variance = 0;
-        for (const pos of recentPositions) {
-            const dx = pos.x - meanX;
-            const dy = pos.y - meanY;
+        for (const p of recent) {
+            const dx = p.x - meanX;
+            const dy = p.y - meanY;
             variance += dx * dx + dy * dy;
         }
-        variance /= recentPositions.length;
-
-        // Normalize to 0-1 range (assuming max variance of ~2500)
+        variance /= recent.length;
         this.oscillationAmplitude = Math.min(1, Math.sqrt(variance) / 50);
 
-        // Calculate recovery rate (autocorrelation / return time)
-        // Higher values = faster recovery = more stable
-        const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Recovery Rate
+        // If speed is high, we are not "recovering" to a point effectively?
+        // Actually, recovery rate concept works better with discrete perturbations.
+        // For continuous, we can use speed as an inverse proxy for stability if we assume a depression.
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        this.recoveryRate = Math.max(0, 1 - (speed / (Ball.MAX_VELOCITY * 0.5)));
 
-        // If ball is nearly stationary, recovery is fast
-        // If ball keeps moving, recovery is slow (critical slowing down)
-        this.recoveryRate = Math.max(0, 1 - (currentSpeed / Ball.MAX_VELOCITY));
-
-        // Smooth the metrics
+        // Distance from Equilibrium
         this.distanceFromEquilibrium = Math.sqrt(
             Math.pow(this.x - this.equilibriumPosition.x, 2) +
             Math.pow(this.y - this.equilibriumPosition.y, 2)
         );
     }
 
-    /**
-     * Set the equilibrium position (for recovery tracking)
-     */
     setEquilibrium() {
         this.equilibriumPosition = { x: this.x, y: this.y };
     }
 
-    /**
-     * Apply a manual impulse to the ball
-     */
     applyImpulse(fx, fy) {
         this.vx += fx;
         this.vy += fy;
         this.lastPerturbationTime = Date.now();
     }
 
-    /**
-     * Set the ball's position directly
-     */
     setPosition(x, y) {
         this.x = x;
         this.y = y;
@@ -321,150 +206,138 @@ class Ball {
     }
 
     /**
-     * Move ball to a specific hex
-     */
-    moveToHex(q, r) {
-        const pos = this.grid.hexToPixel(q, r);
-        this.setPosition(pos.x, pos.y);
-        this.setEquilibrium();
-    }
-
-    /**
-     * Get the hex the ball is currently over
-     */
-    getCurrentHex() {
-        return this.grid.getHexAtPixel(this.x, this.y);
-    }
-
-    /**
-     * Check if ball is settled (low velocity)
-     */
-    isSettled(threshold = 0.5) {
-        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        return speed < threshold;
-    }
-
-    /**
-     * Draw the ball with optional trail
+     * Draw the ball
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {boolean} showTrail
+     * @param {Object} viewOffset - Optional camera offset { x, y }
      */
     draw(ctx, showTrail = true, viewOffset = { x: 0, y: 0 }) {
-        const x = this.x - viewOffset.x;
-        const y = this.y - viewOffset.y;
+        // Calculate draw positions with camera offset
+        const drawX = this.x - viewOffset.x;
+        const drawY = this.y - viewOffset.y;
 
-        // Draw trail
+        // Draw Trail
         if (showTrail && this.trail.length > 1) {
-            ctx.beginPath();
-            ctx.moveTo(this.trail[0].x - viewOffset.x, this.trail[0].y - viewOffset.y);
-
-            for (let i = 1; i < this.trail.length; i++) {
-                ctx.lineTo(this.trail[i].x - viewOffset.x, this.trail[i].y - viewOffset.y);
-            }
-
-            ctx.strokeStyle = this.trailColor;
-            ctx.lineWidth = this.radius * 0.6;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // Fade effect - draw circles with decreasing opacity
             for (let i = 0; i < this.trail.length; i++) {
                 const alpha = (i / this.trail.length) * 0.3;
                 const size = this.radius * 0.3 * (i / this.trail.length);
-
+                const p = this.trail[i];
+                const trailX = p.x - viewOffset.x;
+                const trailY = p.y - viewOffset.y;
                 ctx.beginPath();
-                ctx.arc(this.trail[i].x - viewOffset.x, this.trail[i].y - viewOffset.y, size, 0, Math.PI * 2);
+                ctx.arc(trailX, trailY, size, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(74, 144, 217, ${alpha})`;
                 ctx.fill();
             }
         }
 
-        // Draw ball shadow
+        // 1. Draw Vibration (Micro-noise shimmer pulse)
+        if (this.shimmerEnergy > 0) {
+            const numRings = 3;
+            // Jitter and alpha tied to shimmerEnergy
+            const jitterScale = this.noiseLevel * 15 * this.shimmerEnergy;
+
+            ctx.save();
+            for (let i = 0; i < numRings; i++) {
+                const offsetX = (Math.random() - 0.5) * jitterScale;
+                const offsetY = (Math.random() - 0.5) * jitterScale;
+                const alpha = this.shimmerEnergy * (0.3 + Math.random() * 0.3);
+
+                ctx.beginPath();
+                const r = this.radius + 2 + (i * 2) + (Math.random() * 2);
+                ctx.arc(drawX + offsetX, drawY + offsetY, r, 0, Math.PI * 2);
+
+                ctx.strokeStyle = `rgba(180, 210, 255, ${alpha})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // 2. Draw Shadow
         ctx.beginPath();
-        ctx.arc(x + 3, y + 3, this.radius, 0, Math.PI * 2);
+        ctx.arc(drawX + 3, drawY + 3, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fill();
 
-        // Draw ball
-        const gradient = ctx.createRadialGradient(
-            x - this.radius * 0.3,
-            y - this.radius * 0.3,
-            0,
-            x,
-            y,
-            this.radius
-        );
-        gradient.addColorStop(0, '#6BA8E5');
-        gradient.addColorStop(0.7, this.color);
-        gradient.addColorStop(1, '#3A7BC8');
-
+        // Draw Ball
         ctx.beginPath();
-        ctx.arc(x, y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
+        ctx.arc(drawX, drawY, this.radius, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(drawX - 4, drawY - 4, 0, drawX, drawY, this.radius);
+        grad.addColorStop(0, '#6BA8E5');
+        grad.addColorStop(1, '#3A7BC8');
+        ctx.fillStyle = grad;
         ctx.fill();
 
         // Highlight
         ctx.beginPath();
-        ctx.arc(
-            x - this.radius * 0.3,
-            y - this.radius * 0.3,
-            this.radius * 0.25,
-            0,
-            Math.PI * 2
-        );
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.arc(drawX - 4, drawY - 4, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.fill();
 
-        // Ruin state overlay
         if (this.isInRuin) {
-            ctx.beginPath();
-            ctx.arc(x, y, this.radius + 5, 0, Math.PI * 2);
-            ctx.strokeStyle = '#E84855';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([5, 5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // X mark
-            ctx.strokeStyle = '#E84855';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(x - 8, y - 8);
-            ctx.lineTo(x + 8, y + 8);
-            ctx.moveTo(x + 8, y - 8);
-            ctx.lineTo(x - 8, y + 8);
-            ctx.stroke();
+            // ... ruin overlay ...
         }
     }
 
+    // ============================================
+    // Discrete Movement Methods (for Act 1 HexGrid)
+    // ============================================
+
     /**
-     * Get wobble metrics for UI display
+     * Check if ball is currently animating a discrete move
      */
-    getWobbleMetrics() {
-        return {
-            oscillation: this.oscillationAmplitude,
-            recovery: this.recoveryRate,
-            speed: Math.sqrt(this.vx * this.vx + this.vy * this.vy),
-            distanceFromEquilibrium: this.distanceFromEquilibrium
-        };
+    isMovingDiscrete() {
+        return this._isMovingDiscrete || false;
     }
 
     /**
-     * Reset ball state
+     * Animate ball to a specific hex cell (discrete movement for Act 1)
+     * @param {number} col - Target column
+     * @param {number} row - Target row
+     * @param {number} duration - Animation duration in ms
      */
-    reset(q, r) {
-        const pos = this.grid.hexToPixel(q, r);
-        this.x = pos.x;
-        this.y = pos.y;
-        this.vx = 0;
-        this.vy = 0;
-        this.trail = [];
-        this.positionHistory = [];
-        this.isInRuin = false;
-        this.noiseLevel = 0;
-        this.oscillationAmplitude = 0;
-        this.recoveryRate = 1;
-        this.equilibriumPosition = { x: pos.x, y: pos.y };
+    moveTo(col, row, duration = 300) {
+        if (!this.grid || typeof this.grid.hexToPixel !== 'function') return;
+
+        const targetPos = this.grid.hexToPixel(col, row);
+        const startX = this.x;
+        const startY = this.y;
+        const startTime = performance.now();
+
+        this._isMovingDiscrete = true;
+        this._targetCol = col;
+        this._targetRow = row;
+
+        const animate = () => {
+            const elapsed = performance.now() - startTime;
+            const t = Math.min(1, elapsed / duration);
+
+            // Ease-out cubic
+            const ease = 1 - Math.pow(1 - t, 3);
+
+            this.x = startX + (targetPos.x - startX) * ease;
+            this.y = startY + (targetPos.y - startY) * ease;
+
+            if (t < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                this.x = targetPos.x;
+                this.y = targetPos.y;
+                this._isMovingDiscrete = false;
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    /**
+     * Get the hex cell the ball is currently on (for Act 1)
+     * @returns {Object|null} The hex cell or null
+     */
+    getCurrentHex() {
+        if (!this.grid || typeof this.grid.getHexAtPixel !== 'function') return null;
+        return this.grid.getHexAtPixel(this.x, this.y);
     }
 }
-
-// Export for use in other modules
 window.Ball = Ball;

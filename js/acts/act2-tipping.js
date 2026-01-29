@@ -1,472 +1,1057 @@
 /**
- * Act 2: Two Ways to Tip - N-Tipping vs B-Tipping
+ * Act 2: Changing the Landscape - B-Tipping
  * 
- * This act demonstrates the two fundamental ways complex systems can fail:
+ * Bridges from Act 1's N-tipping (nudging the ball) to B-tipping (changing the landscape).
+ * Ball receives random shocks (N-tipping) while user reshapes terrain (B-tipping).
  * 
- * N-Tipping (Noise-induced): A stable system is pushed into failure by a
- *   random shock. The landscape itself is fine; bad luck struck.
- * 
- * B-Tipping (Bifurcation-induced): The landscape gradually erodes, making
- *   the system increasingly fragile until even small perturbations cause failure.
- * 
- * Key insight: Prevention strategies differ. For N-tipping, build buffers.
- * For B-tipping, monitor whether the landscape is changing.
+ * Mechanics:
+ * - Ball starts on top of a hill to the left
+ * - Target (⭐) is on a high ridge on the right  
+ * - Random shocks periodically nudge the ball
+ * - User clicks to LIFT or LOWER terrain (stamping)
+ * - Goal: Reshape landscape so ball reaches the target
  */
 
 class Act2Tipping {
     constructor() {
-        // Grid A: N-Tipping (noise-induced)
-        this.canvasA = null;
-        this.ctxA = null;
-        this.gridA = null;
-        this.ballA = null;
+        this.canvas = null;
+        this.ctx = null;
+        this.terrain = null;
+        this.ball = null;
 
-        // Grid B: B-Tipping (bifurcation-induced)
-        this.canvasB = null;
-        this.ctxB = null;
-        this.gridB = null;
-        this.ballB = null;
+        // Goal position (will be set relative to canvas size)
+        this.goalPos = { x: 0, y: 0 };
 
         // State
-        this.noiseLevel = 0;
-        this.erosionCount = 0;
-        this.nTipped = false;
-        this.bTipped = false;
+        this.clickCount = 0;
+        this.isComplete = false;
+        this.editMode = 'lift'; // 'lift' or 'lower'
+        this._modeBtnRect = { x: 0, y: 0, w: 0, h: 0 };
+
+        // Random shocks (N-tipping)
+        this.lastShockTime = 0;
+        this.shockInterval = 1500; // Slower shocks
 
         // Animation
         this.animationId = null;
+        this.lastTime = 0;
+
+        // Shock Visualization State
+        this.activeShock = null; // { x, y, angle, magnitude, startTime }
+
+        // Scoring
+        this.bestScore = Infinity;
+        this.isNewRecord = false;
+        this.prevClickCount = 0;
+        this.stageAttempt = 1;
+        this.stageMode = 1;
 
         // Callbacks
-        this.onNTip = null;
-        this.onBTip = null;
-        this.onBothTipped = null;
+        this.onComplete = null;
+
+        // Hidden state
+        this._goalReachedTime = 0;
+        this.illegalClicks = []; // Track clicks at terrain limits
+        this.ruinPositions = []; // Support for multiple ruin states
+        this.MAX_HEIGHT = 4.0;
+        this.MIN_HEIGHT = -4.0;
+
+        // Sensitivity Demo State
+        this.demoState = 'idle'; // 'run1', 'waiting_reset', 'run2', 'success'
+        this.demoRun1Path = null; // {start: {x,y}, end: {x,y}}
+        this.demoRun2Path = null;
+        this.demoStartTime = 0;
+        this.demoDuration = 3000; // 3 seconds per run
     }
 
     /**
-     * Initialize both grids
+     * Initialize
      */
-    init(canvasAId, canvasBId) {
-        this._initGridA(canvasAId);
-        this._initGridB(canvasBId);
-        this._setupControlListeners();
+    init(canvasId, stageMode = 1) {
+        console.log('Act2Tipping.init called for stage:', stageMode);
+
+        const isStageChange = stageMode !== this.stageMode;
+        this.stageMode = stageMode;
+
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) return;
+
+        this.ctx = this.canvas.getContext('2d');
+        this._setupCanvas();
+        this._setupLandscape();
+
+        // Ball setup
+        const w = this.canvas.width / (window.devicePixelRatio || 1);
+        const h = this.canvas.height / (window.devicePixelRatio || 1);
+
+        let startX = w * 0.25;
+        let startY = h * 0.5;
+
+        if (this.customConfig && this.customConfig.ballStart) {
+            startX = this.customConfig.ballStart.x * w;
+            startY = this.customConfig.ballStart.y * h;
+        }
+
+        this.ball = new Ball(this.terrain, startX, startY);
+        this.ball.noiseLevel = 0.4;
+
+        this._setupClickHandler();
+        this._setupNarrativeHandlers();
+
+        // Initial State
+        if (this.stageMode === 2) {
+            this.stageAttempt = 3; // Stage 2 starts at Ruin attempt
+            this.state = 's2-intro';
+        } else if (isStageChange || !this.stageAttempt) {
+            this.stageAttempt = 1;
+        }
+
+        // Always reset these when init is called for a new run
+        this.clickCount = 0;
+        this.isComplete = false;
+        this.isSurprised = false;
+        this.ruinPositions = [];
+        this.surpriseTimer = 0;
+        this._goalReachedTime = 0;
+
+        // Sync system/goal labels from localStorage
+        const savedSys = localStorage.getItem('hexi_act2_system') || 'the system';
+        const savedGoal = localStorage.getItem('hexi_act2_goal') || 'the goal';
+        document.querySelectorAll('.val-system').forEach(el => el.textContent = savedSys);
+        document.querySelectorAll('.val-goal').forEach(el => el.textContent = savedGoal);
+
+        // Custom Scenario Configuration
+        this.customConfig = null;
+
+        this._goalReachedTime = 0;
+        this.lastTime = performance.now();
+        this.lastShockTime = this.lastTime;
+        this.activeShock = null;
+
+        // Stage-specific setup
+        if (this.stageMode === 2 && this.stageAttempt === 3) {
+            // Direct jump to ruin scenario
+            this.state = 'playing';
+            this._populateRuins();
+            this._hideOverlay();
+        } else if (this.stageAttempt === 2) {
+            // Early Ruin for Attempt 2
+            this._populateRuins();
+            this.state = 'playing';
+            this._hideOverlay();
+        } else if (this.stageMode === 2 && this.stageAttempt === 3) {
+            this.state = 's2-intro';
+            this._showScreen('s2-intro');
+        } else if (this.stageMode === 2 && this.stageAttempt === 1) {
+            // Fallback for Stage 2 Attempt 1 if ever needed
+            this.state = 's2-intro';
+            this._showScreen('s2-intro');
+        } else if (this.stageMode === 1 && this.stageAttempt === 1) {
+            this.state = 'setup'; // Show input screen
+            this._showScreen('setup');
+        } else {
+            // Replays or intermediate attempts
+            this.state = 'playing';
+            this._hideOverlay();
+        }
+
+        this._startAnimation();
+    }
+
+    startSensitivityDemo() {
+        console.log('Starting Sensitivity Demo');
+        this.state = 'sensitivity_demo';
+        this.demoState = 'run1';
+        this._hideOverlay();
+
+        // 1. Reset setup for demo
+        this.isComplete = false;
+        this.ruinPositions = []; // Clear skulls from previous stages
+        this._setupLandscape(); // Reset terrain stamps
+        if (this.ball) this.ball.terrain = this.terrain; // Re-link!
+
+        // 2. Set ball to unstable equilibrium (same as Act 2 start)
+        const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
+        const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+
+        // Explicitly set start to the ridge start point
+        const startX = logicalWidth * 0.25;
+        const startY = logicalHeight * 0.5;
+
+        this.ball.x = startX;
+        this.ball.y = startY;
+        this.ball.vx = 0;
+        this.ball.vy = 0;
+        this.ball.frozen = false;
+
+        // Force noise so it moves
+        this.ball.noiseLevel = 0.5;
+
+        this.demoStartTime = performance.now();
+        this.demoRun1Path = { start: { x: startX, y: startY } };
+
+        // Ensure no old shocks are drawing
+        this.activeShock = null;
+    }
+
+    continueSensitivityDemo() {
+        // Called when user clicks "Start Over" after Run 1 (or after failed Run 2)
+        console.log('Continuing Sensitivity Demo - Starting Run 2');
+        this.state = 'sensitivity_demo'; // Ensure update loop knows we are in demo
+        this.demoState = 'run2';
+        this.ruinPositions = []; // SAFETY: Clear any potential skulls
+        this._hideOverlay();
+
+        const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
+        const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+
+        const startX = logicalWidth * 0.25;
+        const startY = logicalHeight * 0.5;
+
+        // Reset ball EXACTLY
+        this.ball.x = startX;
+        this.ball.y = startY;
+        this.ball.vx = 0;
+        this.ball.vy = 0;
+        this.ball.frozen = false;
+        this.isComplete = false; // Reset here too just in case
+
+        this.demoStartTime = performance.now();
+        this.demoRun2Path = { start: { x: startX, y: startY } };
+    }
+
+    _setupCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const containerWidth = this.canvas.parentElement ? this.canvas.parentElement.clientWidth : window.innerWidth;
+        const aspect = 0.6;
+        // Ensure strictly positive width to avoid negative dimensions issues
+        const safeWidth = Math.max(300, containerWidth || window.innerWidth);
+        const cssWidth = Math.min(800, safeWidth - 20);
+        const cssHeight = cssWidth * aspect;
+
+        this.canvas.style.width = `${cssWidth}px`;
+        this.canvas.style.height = `${cssHeight}px`;
+        this.canvas.width = cssWidth * dpr;
+        this.canvas.height = cssHeight * dpr;
+        this.ctx.scale(dpr, dpr);
+
+        this.terrain = new Terrain(cssWidth, cssHeight, 512);
+    }
+
+    _setupNarrativeHandlers() {
+        const btnNext1 = document.getElementById('act2-btn-next-1');
+        const btnNext2 = document.getElementById('act2-btn-next-2');
+        const btnReady = document.getElementById('act2-btn-ready');
+        const btnStart = document.getElementById('act2-btn-start');
+        const btnReplay1 = document.getElementById('act2-btn-replay-1');
+        const btnReplay2 = document.getElementById('act2-btn-replay-2');
+
+        if (btnNext1) btnNext1.onclick = () => {
+            const sys = document.getElementById('act2-input-system').value || 'The System';
+            const goal = document.getElementById('act2-input-goal').value || 'The Goal';
+            localStorage.setItem('hexi_act2_system', sys);
+            localStorage.setItem('hexi_act2_goal', goal);
+
+            document.querySelectorAll('.val-system').forEach(el => el.textContent = sys);
+            document.querySelectorAll('.val-goal').forEach(el => el.textContent = goal);
+
+            this._showScreen('concepts');
+        };
+
+        if (btnNext2) btnNext2.onclick = () => this._showScreen('observation');
+
+        if (btnReady) btnReady.onclick = () => {
+            this._hideOverlay();
+            this.state = 'observing';
+            this.observationStartTime = performance.now();
+        };
+
+        if (btnStart) btnStart.onclick = () => {
+            this.reset();
+            this.state = 'playing';
+            this._hideOverlay();
+        };
+
+        if (btnReplay1) btnReplay1.onclick = () => {
+            this.state = 'playing';
+            this.stageAttempt = 2; // Second try with advice
+            this.prevClickCount = this.clickCount;
+            this.reset();
+            this._hideOverlay();
+        };
+
+        if (btnReplay2) btnReplay2.onclick = () => {
+            if (this.stageMode === 1) {
+                // If ending Stage 1 normal tries, go to Stage 2 Surprise
+                if (window.app && window.app.showAct) {
+                    window.app.showAct('act2-s2'); // This will set attempt to 3 in init
+                } else {
+                    this.stageAttempt = 3;
+                    this.init(this.canvas.id, 2);
+                }
+            } else {
+                this.state = 'playing';
+                this.stageAttempt = 3;
+                this.reset();
+                this._hideOverlay();
+            }
+        };
+
+
+        const btnComplete = document.getElementById('act2-btn-complete');
+        // Initial setup for the button if it exists
+        if (btnComplete) {
+            btnComplete.onclick = () => {
+                if (this.stageMode === 1) {
+                    if (window.app && window.app.showAct) {
+                        window.app.showAct('act2-s2');
+                    } else {
+                        this.init(this.canvas.id, 2);
+                    }
+                } else {
+                    this.stop();
+                    // Instead of full exit, maybe show sensitivity option? 
+                    // But if this button IS the "Show me" button now, it's handled below.
+                }
+            };
+        }
+
+        // Sensitivity Demo Buttons
+        const btnShowSens = document.getElementById('act2-btn-show-sensitivity');
+        if (btnShowSens) {
+            btnShowSens.onclick = () => {
+                this.startSensitivityDemo();
+            };
+        }
+
+        // Fallback or Override for btnComplete if it acts as "Show me"
+        if (btnComplete && btnComplete.innerText.includes('Show me')) {
+            btnComplete.onclick = () => {
+                this.startSensitivityDemo();
+            };
+        }
+
+        const btnSensRetry = document.getElementById('act2-sens-btn-retry');
+        if (btnSensRetry) {
+            btnSensRetry.onclick = () => {
+                this.continueSensitivityDemo();
+            };
+        }
+
+        const btnSensContinue = document.getElementById('act2-sens-btn-continue');
+        if (btnSensContinue) {
+            btnSensContinue.onclick = () => {
+                this._showScreen('sensitivity-explainer');
+            };
+        }
+
+        const btnExplainerNext = document.getElementById('act2-explainer-btn-next');
+        if (btnExplainerNext) {
+            btnExplainerNext.onclick = () => {
+                this._showScreen('questionnaire');
+            };
+        }
+
+
+        // Stage 2 Buttons
+        const btnS2Start = document.getElementById('act2-s2-btn-start');
+        const btnS2Pivot = document.getElementById('act2-s2-btn-pivot');
+        const btnS2Retry = document.getElementById('act2-s2-btn-retry');
+
+        if (btnS2Start) btnS2Start.onclick = () => {
+            this._hideOverlay();
+            this.state = 'playing';
+            this.clickCount = 0;
+        };
+
+        if (btnS2Pivot) btnS2Pivot.onclick = () => {
+            this._hideOverlay();
+            this.state = 'playing';
+        };
+
+        if (btnS2Retry) btnS2Retry.onclick = () => {
+            this.reset();
+            this.state = 'playing';
+            this._hideOverlay();
+        };
+    }
+
+    _showScreen(screenId) {
+        this.state = screenId;
+        const overlay = document.getElementById('act2-narrative-overlay');
+        const screen = document.getElementById(`act2-screen-${screenId}`);
+
+        if (!overlay || !screen) {
+            console.warn(`Narrative screen or overlay not found: ${screenId}`);
+            return;
+        }
+
+        overlay.classList.remove('hidden');
+        document.querySelectorAll('.narrative-overlay .screen').forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+    }
+
+    _hideOverlay() {
+        const overlay = document.getElementById('act2-narrative-overlay');
+        overlay.classList.add('hidden');
+    }
+
+    _update(dt, timestamp) {
+        if (!this.ball || this.isComplete) return;
+
+        if (this.state === 'observing') {
+            const elapsed = (timestamp - this.observationStartTime) / 1000;
+            const duration = 7;
+
+            if (elapsed >= duration) {
+                this._showScreen('play-prompt');
+            }
+        }
+
+        if (this.state === 'sensitivity_demo') {
+            const elapsed = timestamp - this.demoStartTime;
+
+            if (this.demoState === 'run1' || this.demoState === 'run2') {
+                // Stop after duration
+                if (elapsed > this.demoDuration) {
+                    this.ball.frozen = true;
+
+                    if (this.demoState === 'run1') {
+                        this.demoRun1Path.end = { x: this.ball.x, y: this.ball.y };
+                        this.demoState = 'waiting_retry';
+                        // Show "Start Over" popup
+                        this._showScreen('sensitivity-retry');
+                    } else if (this.demoState === 'run2') {
+                        this.demoRun2Path.end = { x: this.ball.x, y: this.ball.y };
+
+                        // Compare
+                        if (this._checkSensitivityDivergence()) {
+                            this.demoState = 'success';
+                            // Wait a moment then show success? Or immediately
+                            setTimeout(() => {
+                                this._showScreen('sensitivity-explainer');
+                            }, 500);
+                        } else {
+                            // Failed to diverge enough. Loop.
+                            // Make Run 2 the new Run 1!
+                            this.demoRun1Path = this.demoRun2Path;
+                            this.demoRun2Path = null;
+                            this.demoState = 'waiting_retry';
+
+                            // Update text to indicate we are trying again?
+                            // For simplicity, just show the same "Start Over" screen
+                            this._showScreen('sensitivity-retry');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Random shocks - active during 'observing', 'playing', and 'sensitivity_demo' runs
+        const inDemoRun = this.state === 'sensitivity_demo' && (this.demoState === 'run1' || this.demoState === 'run2') && !this.ball.frozen;
+        if ((this.state === 'playing' || this.state === 'observing' || inDemoRun) && !this._goalReachedTime) {
+            if (timestamp - this.lastShockTime > this.shockInterval) {
+                // Gentle Shocks: Reduced force to nudge rather than slam
+                const force = 1.2 + Math.random() * 0.8;
+                const angle = Math.random() * Math.PI * 2;
+                this.ball.applyImpulse(Math.cos(angle) * force, Math.sin(angle) * force);
+                this.activeShock = { x: this.ball.x, y: this.ball.y, angle, magnitude: force, startTime: timestamp };
+                this.lastShockTime = timestamp;
+            }
+        }
+
+        if (this.state === 'playing' || this.state === 'observing' || (this.state === 'sensitivity_demo' && !this.ball.frozen)) {
+            this.ball.update(dt);
+        }
+
+        // Check Goal
+        if (this.state === 'playing') {
+            const dx = this.ball.x - this.goalPos.x;
+            const dy = this.ball.y - this.goalPos.y;
+            if (Math.hypot(dx, dy) < 28 && !this._goalReachedTime) {
+                this._goalReachedTime = timestamp;
+            }
+
+            if (this._goalReachedTime && timestamp - this._goalReachedTime > 1500) {
+                this._handleWin();
+            }
+
+            // Stage 2 Attempt 3 Surprise logic
+            if (this.stageAttempt === 3 && !this.isSurprised) {
+                const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
+                if (this.ball.x > logicalWidth * 0.5) {
+                    this.isSurprised = true;
+                    // Original goal turns into a ruin
+                    this.ruinPositions.push({ ...this.goalPos });
+                    // Move goal to North-West
+                    const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+                    this.goalPos = { x: logicalWidth * 0.2, y: logicalHeight * 0.2 };
+                    this.surpriseTimer = timestamp;
+                }
+            }
+
+            // Uh-oh pop-up timer
+            if (this.isSurprised && this.surpriseTimer && timestamp - this.surpriseTimer > 2000) {
+                this.surpriseTimer = 0;
+                this._showScreen('s2-surprise');
+            }
+
+            // Ruin check (Failure condition)
+            for (const ruin of this.ruinPositions) {
+                const rx = this.ball.x - ruin.x;
+                const ry = this.ball.y - ruin.y;
+                if (Math.hypot(rx, ry) < 28) {
+                    this.state = 'failed';
+                    this._showScreen('s2-failed');
+                    break;
+                }
+            }
+        }
+    }
+
+    _handleWin() {
+        if (this.isComplete) return;
+        this.isComplete = true;
+
+        if (this.stageAttempt === 2) {
+            // Compare results
+            const resultDiv = document.getElementById('comparison-result');
+            if (this.clickCount < this.prevClickCount) {
+                resultDiv.innerHTML = `<p><strong>Congratulations!</strong> You reached the goal in <strong>${this.clickCount}</strong> stamps, down from the <strong>${this.prevClickCount}</strong> of last time. Working smartly paid off!</p>`;
+            } else {
+                resultDiv.innerHTML = `<p>You reached the goal again! This time, you used <strong>${this.clickCount}</strong> stamps (compared to ${this.prevClickCount} last time). But sometimes that's what happens – navigating the landscape can be unpredictable!</p>`;
+            }
+
+            if (this.stageMode === 2) {
+                // Adjust text for Stage 2 Final Try (The Ruin Shift)
+                const comparisonScreen = document.getElementById('act2-screen-comparison');
+                const paragraphs = comparisonScreen.querySelectorAll('p');
+                if (paragraphs.length >= 3) {
+                    paragraphs[2].textContent = "But even the best laid plans can be disrupted by systemic shifts. Ready to see how your strategy holds up when the landscape moves?";
+                }
+                const btn = document.getElementById('act2-btn-replay-2');
+                if (btn) btn.textContent = "Start Final Challenge";
+            } else {
+                // Restore defaults for Stage 1
+                const comparisonScreen = document.getElementById('act2-screen-comparison');
+                const paragraphs = comparisonScreen.querySelectorAll('p');
+                const btn = document.getElementById('act2-btn-replay-2');
+                if (btn) btn.textContent = "Start Final Try";
+            }
+
+            this._showScreen('comparison');
+        } else if (this.stageAttempt === 3) {
+            // End of stage
+            this._showScreen('final');
+        } else {
+            // First win
+            document.querySelectorAll('.val-clicks').forEach(el => el.textContent = this.clickCount);
+            this._showScreen('strategy');
+        }
+    }
+
+    _checkSensitivityDivergence() {
+        if (!this.demoRun1Path || !this.demoRun2Path) return false;
+
+        const p1 = this.demoRun1Path;
+        const p2 = this.demoRun2Path;
+
+        // Vector 1
+        const v1x = p1.end.x - p1.start.x;
+        const v1y = p1.end.y - p1.start.y;
+
+        // Vector 2
+        const v2x = p2.end.x - p2.start.x;
+        const v2y = p2.end.y - p2.start.y;
+
+        const mag1 = Math.hypot(v1x, v1y);
+        const mag2 = Math.hypot(v2x, v2y);
+
+        if (mag1 < 5 || mag2 < 5) return false; // Too small movement to compare angles
+
+        const dot = v1x * v2x + v1y * v2y;
+        const cosAngle = dot / (mag1 * mag2);
+
+        // Clamp for safety
+        const clampedCos = Math.max(-1, Math.min(1, cosAngle));
+        const angleRad = Math.acos(clampedCos);
+        const angleDeg = angleRad * (180 / Math.PI);
+
+        console.log(`Sensitivity Test: Angle diff = ${angleDeg.toFixed(1)} degrees`);
+
+        return angleDeg > 30;
+    }
+
+    _draw() {
+        if (!this.ctx) return;
+
+        // Safety clear - prevents trails if terrain render fails
+        // Use logic coordinates because we scaled the context
+        const logicalW = this.canvas.width / (window.devicePixelRatio || 1);
+        const logicalH = this.canvas.height / (window.devicePixelRatio || 1);
+        this.ctx.clearRect(0, 0, logicalW, logicalH);
+
+        // 1. Draw Terrain
+        this.terrain.draw(this.ctx);
+
+        // 2. Draw Goal
+        if (this.state !== 'sensitivity_demo') {
+            this._drawGoal();
+        } else {
+            // Draw traces for sensitivity demo
+            this._drawSensitivityTraces();
+        }
+
+        // 3. Draw Shock Arrow
+        this._drawShockArrow();
+
+        // 4. Draw Ball
+        if (this.ball) {
+            this.ball.draw(this.ctx, true);
+        }
+
+        // 5. Draw Illegal clicks
+        this._drawIllegalClicks();
+
+        // 6. Draw UI
+        this._drawUI();
+    }
+
+    _drawIllegalClicks() {
+        if (this.illegalClicks.length === 0) return;
+
+        const now = performance.now();
+        const duration = 1000; // 1 second fade
+
+        this.ctx.save();
+        this.ctx.font = 'bold 24px "Work Sans", sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
+        for (let i = this.illegalClicks.length - 1; i >= 0; i--) {
+            const click = this.illegalClicks[i];
+            const elapsed = now - click.startTime;
+
+            if (elapsed > duration) {
+                this.illegalClicks.splice(i, 1);
+                continue;
+            }
+
+            const alpha = 1.0 - (elapsed / duration);
+            this.ctx.fillStyle = `rgba(211, 47, 47, ${alpha})`; // Red 700
+            this.ctx.fillText('X', click.x, click.y);
+        }
+        this.ctx.restore();
+    }
+
+    _drawGoal() {
+        const { x, y } = this.goalPos;
+        this.ctx.save();
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowColor = 'gold';
+        this.ctx.font = '30px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('⭐', x, y);
+        this.ctx.restore();
+
+        // Draw Ruins
+        for (const ruin of this.ruinPositions) {
+            this.ctx.save();
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowColor = 'red';
+            this.ctx.font = '30px sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('💀', ruin.x, ruin.y);
+            this.ctx.restore();
+        }
+    }
+
+    /**
+     * Draw arrow indicating the last shock
+     */
+    _drawShockArrow() {
+        if (!this.activeShock) return;
+
+        const duration = 600;
+        const elapsed = performance.now() - this.activeShock.startTime;
+
+        if (elapsed > duration) {
+            this.activeShock = null;
+            return;
+        }
+
+        const alpha = 1.0 - (elapsed / duration);
+        const { x, y, angle, magnitude } = this.activeShock;
+
+        // Scale arrow size by magnitude
+        const length = magnitude * 15;
+        const headSize = 10;
+        const thickness = Math.max(2, magnitude * 1.5);
+        const rim = 12; // Ball radius
+
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(angle);
+
+        this.ctx.beginPath();
+        this.ctx.lineWidth = thickness;
+        this.ctx.lineCap = 'round';
+        this.ctx.strokeStyle = `rgba(239, 83, 80, ${alpha})`; // Reddish color for "shock"
+
+        // Arrow points AT the ball from the direction of impact
+        // Impulse is along +X, so impact comes from -X
+        const headX = -rim;
+        const tailX = -rim - length;
+
+        // Line
+        this.ctx.moveTo(tailX, 0);
+        this.ctx.lineTo(headX, 0);
+
+        // Arrowhead at the rim
+        this.ctx.moveTo(headX - headSize, -headSize);
+        this.ctx.lineTo(headX, 0);
+        this.ctx.lineTo(headX - headSize, headSize);
+
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+    _drawSensitivityTraces() {
+        // Draw start point
+        if (this.demoRun1Path) {
+            const s = this.demoRun1Path.start;
+            this.ctx.fillStyle = '#000';
+            this.ctx.beginPath();
+            this.ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+
+        // Draw Run 1 Trace (Ghost)
+        if (this.demoRun1Path && this.demoRun1Path.end) {
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            this.ctx.setLineDash([5, 5]);
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.demoRun1Path.start.x, this.demoRun1Path.start.y);
+            this.ctx.lineTo(this.demoRun1Path.end.x, this.demoRun1Path.end.y);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+
+            // End point
+            this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            this.ctx.beginPath();
+            this.ctx.arc(this.demoRun1Path.end.x, this.demoRun1Path.end.y, 4, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+    }
+
+    _drawUI() {
+        const overlay = document.getElementById('act2-narrative-overlay');
+        const isOverlayVisible = overlay && !overlay.classList.contains('hidden');
+
+        if (isOverlayVisible || this.state === 'observing' || this.state === 'setup') return;
+
+        if (!this.isComplete) {
+            this._drawModeToggle();
+            this._drawClickCounter();
+        }
+    }
+
+    _drawClickCounter() {
+        const text = `Stamps used: ${this.clickCount}`;
+        this.ctx.font = '14px "Work Sans", sans-serif';
+        this.ctx.fillStyle = '#333';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText(text, this.canvas.width / (window.devicePixelRatio || 1) - 15, 25);
+    }
+
+    _drawModeToggle() {
+        // ... Reusing styling ...
+        const text = this.editMode === 'lift' ? '⬆️ LIFT' : '⬇️ LOWER';
+
+        this.ctx.font = 'bold 18px "Work Sans", sans-serif';
+        const metrics = this.ctx.measureText(text);
+        const pad = 15;
+        const h = 44; // Larger for mobile tap target
+        const w = metrics.width + pad * 2;
+        const x = 10;
+        const y = this.canvas.height / (window.devicePixelRatio || 1) - h - 10;
+
+        this._modeBtnRect = { x, y, w, h };
+
+        this.ctx.save();
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        this.ctx.strokeStyle = this.editMode === 'lift' ? '#E65100' : '#01579B';
+        this.ctx.lineWidth = 2;
+
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, w, h, 8);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = this.ctx.strokeStyle;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(text, x + w / 2, y + h / 2);
+        this.ctx.restore();
+    }
+
+    _setupLandscape() {
+        // 1. Existing custom config (e.g. from loadConfig)
+        if (this.customConfig && this.customConfig.heights) {
+            this._setupCustomLandscape();
+            return;
+        }
+
+        // 2. Global Default Configuration from file
+        if (window.Act2DefaultLandscape && window.Act2DefaultLandscape.heights) {
+            this.customConfig = window.Act2DefaultLandscape;
+            this._setupCustomLandscape();
+            return;
+        }
+
+        const w = this.terrain.width;
+        const h = this.terrain.height;
+
+        // 1. Initial Fractal noise
+        for (let i = 0; i < this.terrain.heights.length; i++) this.terrain.heights[i] = 0;
+        if (this.terrain.generateFractal) {
+            this.terrain.generateFractal();
+        }
+
+        // 2. Starting Ridge - 25% X, 50% Y
+        const startX = w * 0.25;
+        const startY = h * 0.5;
+        this.terrain.raise(startX, startY, 4.0, w * 0.15);
+
+        // 3. C-shaped valley wrapping around the Ridge
+        // The valley arches around the ridge from North to West to South
+        // Each arm and the back are built as distinct attractors
+
+        // North Arm of C
+        this.terrain.raise(w * 0.35, h * 0.25, -4.0, w * 0.12);
+        this.terrain.raise(w * 0.2, h * 0.25, -4.0, w * 0.12);
+
+        // Back of C (West side)
+        this.terrain.raise(w * 0.08, h * 0.5, -4.0, w * 0.15);
+
+        // South Arm of C
+        this.terrain.raise(w * 0.2, h * 0.75, -4.0, w * 0.12);
+        this.terrain.raise(w * 0.35, h * 0.75, -4.0, w * 0.12);
+
+        // Extra attractor in the valley mouth (poking towards South West)
+        this.terrain.raise(w * 0.2, h * 0.85, -3.5, w * 0.15);
+
+        // 4. Middle Barrier (Ridge)
+        for (let y = 0; y <= h; y += h / 5) {
+            const jX = w * 0.55 + (Math.random() - 0.5) * 50;
+            this.terrain.raise(jX, y, 1.4, w * 0.12);
+        }
+
+        // 5. Build Goal Ridge
+        this.goalPos = { x: w * 0.85, y: h * 0.5 };
+        this.terrain.raise(this.goalPos.x, this.goalPos.y, 4.0, w * 0.15);
+
+        // Smooth everything to blend noise with stamps
+        // Texturize to match manual edits
+        this.terrain.addNoise(0.2, 50.0);
+    }
+
+    /**
+     * Setup click handler
+     */
+    _setupClickHandler() {
+        this.canvas.onmousedown = (e) => {
+            if (this.state !== 'playing' || this.isComplete) return;
+
+            // Ignore right-clicks for terrain modification (prevent double action)
+            if (e.button !== 0) return;
+
+            const rect = this.canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            // Logical coordinates (CSS pixels)
+            const x = (e.clientX - rect.left) * (this.canvas.width / rect.width / dpr);
+            const y = (e.clientY - rect.top) * (this.canvas.height / rect.height / dpr);
+
+            // Check for UI clicks
+            if (this._checkModeButtonClick(x, y)) return;
+
+            // Terrain interaction limits
+            const currentH = this.terrain.getHeightAt(x, y);
+            const amt = this.editMode === 'lift' ? 2.5 : -2.5;
+
+            // Check if modification should be blocked ("go offline")
+            // Use 95% threshold to account for smoothing (4.0 * 0.95 = 3.8)
+            // If the area is already "peaked" or "pitted", stop expanding the stamp
+            if (this.editMode === 'lift' && currentH >= (this.MAX_HEIGHT * 0.95)) {
+                this.illegalClicks.push({ x, y, startTime: performance.now() });
+                return;
+            }
+            if (this.editMode === 'lower' && currentH <= (this.MIN_HEIGHT * 0.95)) {
+                this.illegalClicks.push({ x, y, startTime: performance.now() });
+                return;
+            }
+
+            this.terrain.raise(x, y, amt, 40);
+            this.clickCount++;
+
+            // Wake up ball
+            this.ball.applyImpulse((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
+        };
+
+        // Right-click toggles mode
+        this.canvas.oncontextmenu = (e) => {
+            e.preventDefault();
+            this.editMode = this.editMode === 'lift' ? 'lower' : 'lift';
+        };
+    }
+
+    _checkModeButtonClick(x, y) {
+        const btn = this._modeBtnRect;
+        if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
+            this.editMode = this.editMode === 'lift' ? 'lower' : 'lift';
+            return true;
+        }
+        return false;
+    }
+
+    _startAnimation() {
+        const animate = (timestamp) => {
+            if (!this.canvas) return; // Stopped
+            this.animationId = requestAnimationFrame(animate);
+
+            this.lastTime = this.lastTime || timestamp;
+            const dt = timestamp - this.lastTime;
+            this.lastTime = timestamp;
+
+            this._update(dt, timestamp);
+            this._draw();
+        };
+        requestAnimationFrame(animate);
+    }
+
+    stop() {
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+        this.canvas = null;
+    }
+
+    reset() {
+        console.log('Act2Tipping Reset - Stage:', this.stageMode, 'Attempt:', this.stageAttempt);
+
+        // Stop any existing animation
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+
+        // Reset flags
+        this.isComplete = false;
+        this.clickCount = 0;
+        this._goalReachedTime = 0;
+        this.isSurprised = false;
+        this.ruinPositions = [];
+        this.surpriseTimer = 0;
+        this.lastTime = 0; // Trigger timestamp sync in animation
+        this.illegalClicks = []; // Clear old feedback
+
+        // Re-setup environment
+        this._setupLandscape();
+
+        // Reset ball
+        const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
+        const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+
+        if (this.ball) {
+            if (this.customConfig && this.customConfig.ballStart) {
+                // Use custom start position
+                this.ball.x = this.customConfig.ballStart.x * logicalWidth;
+                this.ball.y = this.customConfig.ballStart.y * logicalHeight;
+            } else {
+                // Default start position
+                this.ball.x = logicalWidth * 0.25;
+                this.ball.y = logicalHeight * 0.5;
+            }
+            this.ball.vx = 0;
+            this.ball.vy = 0;
+            this.ball.terrain = this.terrain; // Re-link
+        }
+
+        // Populate Ruins based on attempt
+        this._populateRuins();
+
+        // Restart loop
         this._startAnimation();
     }
 
     /**
-     * Initialize Grid A (N-Tipping)
+     * Load a custom scenario configuration
+     * @param {Object} config - { heights: number[], ballStart: {x, y} }
      */
-    _initGridA(canvasId) {
-        this.canvasA = document.getElementById(canvasId);
-        if (!this.canvasA) return;
-
-        this.ctxA = this.canvasA.getContext('2d');
-
-        // Create grid
-        const isMobile = window.innerWidth < 650;
-        const hexSize = isMobile ? 45 : 35;
-        this.gridA = new HexGrid(5, 4, hexSize);
-
-        // Set canvas size
-        const dims = this.gridA.getCanvasDimensions();
-        this.canvasA.width = isMobile ? Math.min(window.innerWidth - 60, dims.width) : dims.width;
-        this.canvasA.height = dims.height;
-
-        // Create a valley with the ball
-        this._setupValleyWithRuin(this.gridA);
-
-        // Place ball in valley
-        const valleyCenter = this.gridA.getHex(2, 1);
-        this.ballA = new Ball(this.gridA, valleyCenter.q, valleyCenter.r);
+    loadConfig(config) {
+        this.customConfig = config;
+        this.reset();
     }
 
     /**
-     * Initialize Grid B (B-Tipping)
+     * Apply custom landscape data
      */
-    _initGridB(canvasId) {
-        this.canvasB = document.getElementById(canvasId);
-        if (!this.canvasB) return;
+    _setupCustomLandscape() {
+        if (!this.customConfig || !this.customConfig.heights) return;
 
-        this.ctxB = this.canvasB.getContext('2d');
-
-        // Create grid
-        const isMobile = window.innerWidth < 650;
-        const hexSize = isMobile ? 45 : 35;
-        this.gridB = new HexGrid(5, 4, hexSize);
-
-        // Set canvas size
-        const dims = this.gridB.getCanvasDimensions();
-        this.canvasB.width = isMobile ? Math.min(window.innerWidth - 60, dims.width) : dims.width;
-        this.canvasB.height = dims.height;
-
-        // Create a valley with the ball
-        this._setupValleyWithRuin(this.gridB);
-
-        // Place ball in valley
-        const valleyCenter = this.gridB.getHex(2, 1);
-        this.ballB = new Ball(this.gridB, valleyCenter.q, valleyCenter.r);
-        this.ballB.noiseLevel = 0.05; // Very low noise for B scenario
-    }
-
-    /**
-     * Set up a valley with adjacent ruin
-     */
-    _setupValleyWithRuin(grid) {
-        // Create valley in center-left
-        grid.createValley(2, 1, -2, 1);
-
-        // Place ruin on right side
-        const ruinHex = grid.getHex(4, 0);
-        if (ruinHex) {
-            grid.setRuin(ruinHex.q, ruinHex.r);
-        }
-
-        // Create a slight ridge between valley and ruin
-        const ridgeHex = grid.getHex(3, 0);
-        if (ridgeHex) {
-            ridgeHex.elevation = 1;
-        }
-    }
-
-    /**
-     * Set up control listeners
-     */
-    _setupControlListeners() {
-        // Noise slider for Grid A
-        const noiseSlider = document.getElementById('noise-slider');
-        const noiseValue = document.getElementById('noise-value');
-
-        if (noiseSlider && noiseValue) {
-            noiseSlider.addEventListener('input', () => {
-                this.noiseLevel = parseInt(noiseSlider.value) / 100;
-                noiseValue.textContent = `${noiseSlider.value}%`;
-
-                if (this.ballA) {
-                    this.ballA.noiseLevel = this.noiseLevel;
-                }
-            });
-        }
-
-        // Time passes button for Grid B
-        const timePassesBtn = document.getElementById('time-passes-btn');
-        const erosionCountEl = document.getElementById('erosion-count');
-
-        if (timePassesBtn) {
-            timePassesBtn.addEventListener('click', () => {
-                this.erosionCount++;
-
-                // Apply erosion to Grid B
-                this.gridB.applyErosion(0.5);
-
-                // Update display
-                if (erosionCountEl) {
-                    erosionCountEl.textContent = `Erosion cycles: ${this.erosionCount}`;
-                }
-
-                // Add a small perturbation to show the effect
-                this.ballB.applyImpulse(
-                    (Math.random() - 0.5) * 2,
-                    (Math.random() - 0.5) * 2
-                );
-            });
-        }
-    }
-
-    /**
-     * Animation loop
-     */
-    _startAnimation() {
-        const animate = () => {
-            this.animationId = requestAnimationFrame(animate);
-            this._update();
-            this._draw();
-        };
-        animate();
-    }
-
-    /**
-     * Update physics
-     */
-    _update() {
-        // Update both balls
-        if (this.ballA) {
-            this.ballA.update();
-
-            // Check for N-tipping
-            if (!this.nTipped && this.ballA.isInRuin) {
-                this._handleNTip();
+        // Check if resolution matches. If not, resize Terrain to match incoming data
+        if (this.terrain.heights.length !== this.customConfig.heights.length) {
+            const newRes = Math.sqrt(this.customConfig.heights.length);
+            if (Number.isInteger(newRes)) {
+                console.log(`Resizing Act 2 terrain to ${newRes} to match custom config`);
+                this.terrain = new Terrain(this.terrain.width, this.terrain.height, newRes);
+            } else {
+                console.warn("Custom landscape data length is not a square number!");
             }
         }
 
-        if (this.ballB) {
-            this.ballB.update();
-
-            // Check for B-tipping
-            if (!this.bTipped && this.ballB.isInRuin) {
-                this._handleBTip();
-            }
-        }
-    }
-
-    /**
-     * Handle N-tipping event
-     */
-    _handleNTip() {
-        this.nTipped = true;
-
-        // Show label
-        const label = document.getElementById('n-tip-label');
-        if (label) {
-            label.style.display = 'block';
+        if (this.terrain.heights.length === this.customConfig.heights.length) {
+            this.terrain.heights.set(this.customConfig.heights);
         }
 
-        if (this.onNTip) {
-            this.onNTip({
-                noiseLevel: this.noiseLevel
-            });
-        }
+        // We do NOT run noise or other procedural steps on top
+        // But we DO build the goal, as that's part of the game logic, not the terrain shape per se?
+        // Actually, the user wants "form that initiates Act 2". The goal is usually at a fixed place.
+        // Let's keep the goal procedural so the game is playable, unless the user wants to set the goal too.
+        // The prompt says "landscape form... ball starting location". 
+        // Act 2 logic depends on a goal at 85%, 50%. Let's keep that for now.
 
-        this._checkBothTipped();
+        const w = this.terrain.width;
+        const h = this.terrain.height;
+        this.goalPos = { x: w * 0.85, y: h * 0.5 };
+
+        // Ensure goal area is accessible/marked?
+        // The original code raises a ridge for the goal. We should probably add that if it's not in the custom map.
+        // But the user might have painted it. Let's assume the user painted the landscape fully.
+        // Only ensuring the goal marker position is set.
     }
-
     /**
-     * Handle B-tipping event
+     * Populate ruin positions based on current attempt
      */
-    _handleBTip() {
-        this.bTipped = true;
+    _populateRuins() {
+        const dpr = window.devicePixelRatio || 1;
+        const w = this.canvas.width / dpr;
+        const h = this.canvas.height / dpr;
 
-        // Show label
-        const label = document.getElementById('b-tip-label');
-        if (label) {
-            label.style.display = 'block';
-        }
+        if (this.stageAttempt === 2) {
+            this.ruinPositions.push({ x: w * 0.5, y: h * 0.25 });
+        } else if (this.stageAttempt === 3) {
+            // Persistent Attempt 2 skull
+            this.ruinPositions.push({ x: w * 0.5, y: h * 0.25 });
 
-        if (this.onBTip) {
-            this.onBTip({
-                erosionCycles: this.erosionCount
-            });
-        }
-
-        this._checkBothTipped();
-    }
-
-    /**
-     * Check if both scenarios completed
-     */
-    _checkBothTipped() {
-        if (this.nTipped && this.bTipped && this.onBothTipped) {
-            // Show quiz
-            const quizSection = document.getElementById('act2-quiz');
-            if (quizSection) {
-                quizSection.style.display = 'block';
-                quizSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-
-            this.onBothTipped();
-        }
-    }
-
-    /**
-     * Draw both grids
-     */
-    _draw() {
-        // Draw Grid A
-        if (this.ctxA && this.gridA) {
-            this.ctxA.fillStyle = '#FAFAFA';
-            this.ctxA.fillRect(0, 0, this.canvasA.width, this.canvasA.height);
-            this.gridA.draw(this.ctxA);
-            if (this.ballA) {
-                this.ballA.draw(this.ctxA, true);
-            }
-        }
-
-        // Draw Grid B
-        if (this.ctxB && this.gridB) {
-            this.ctxB.fillStyle = '#FAFAFA';
-            this.ctxB.fillRect(0, 0, this.canvasB.width, this.canvasB.height);
-            this.gridB.draw(this.ctxB);
-            if (this.ballB) {
-                this.ballB.draw(this.ctxB, true);
-            }
-        }
-    }
-
-    /**
-     * Reset Grid A
-     */
-    resetA() {
-        this.gridA.reset();
-        this._setupValleyWithRuin(this.gridA);
-
-        const valleyCenter = this.gridA.getHex(2, 1);
-        this.ballA.reset(valleyCenter.q, valleyCenter.r);
-        this.ballA.noiseLevel = this.noiseLevel;
-
-        this.nTipped = false;
-        const label = document.getElementById('n-tip-label');
-        if (label) label.style.display = 'none';
-    }
-
-    /**
-     * Reset Grid B
-     */
-    resetB() {
-        this.erosionCount = 0;
-
-        this.gridB.reset();
-        this._setupValleyWithRuin(this.gridB);
-
-        const valleyCenter = this.gridB.getHex(2, 1);
-        this.ballB.reset(valleyCenter.q, valleyCenter.r);
-        this.ballB.noiseLevel = 0.05;
-
-        this.bTipped = false;
-        const label = document.getElementById('b-tip-label');
-        if (label) label.style.display = 'none';
-
-        const erosionCountEl = document.getElementById('erosion-count');
-        if (erosionCountEl) {
-            erosionCountEl.textContent = 'Erosion cycles: 0';
-        }
-    }
-
-    /**
-     * Reset everything
-     */
-    reset() {
-        this.resetA();
-        this.resetB();
-    }
-
-    /**
-     * Stop animation
-     */
-    stop() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
-    }
-
-    /**
-     * Clean up
-     */
-    destroy() {
-        this.stop();
-    }
-}
-
-/**
- * Quiz handler for Act 2
- */
-class Act2Quiz {
-    constructor() {
-        this.correctAnswers = 0;
-        this.totalQuestions = 3;
-        this.answeredQuestions = new Set();
-
-        this.onComplete = null;
-    }
-
-    /**
-     * Initialize quiz
-     */
-    init() {
-        const questions = document.querySelectorAll('.quiz-question');
-
-        questions.forEach((question, index) => {
-            const correctAnswer = question.dataset.correct;
-            const buttons = question.querySelectorAll('.quiz-btn');
-            const feedback = question.querySelector('.feedback');
-
-            buttons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (this.answeredQuestions.has(index)) return;
-
-                    this.answeredQuestions.add(index);
-                    const answer = btn.dataset.answer;
-                    const isCorrect = answer === correctAnswer;
-
-                    // Style buttons
-                    buttons.forEach(b => {
-                        b.disabled = true;
-                        if (b.dataset.answer === correctAnswer) {
-                            b.classList.add('correct');
-                        } else if (b === btn && !isCorrect) {
-                            b.classList.add('incorrect');
-                        }
-                    });
-
-                    // Show feedback
-                    if (feedback) {
-                        if (isCorrect) {
-                            this.correctAnswers++;
-                            feedback.textContent = 'Correct!';
-                            feedback.className = 'feedback correct';
-                        } else {
-                            feedback.textContent = correctAnswer === 'n'
-                                ? 'Not quite. This was N-tipping — a random shock hit a stable system.'
-                                : 'Not quite. This was B-tipping — gradual erosion made the system fragile.';
-                            feedback.className = 'feedback incorrect';
-                        }
-                    }
-
-                    // Check if quiz is complete
-                    if (this.answeredQuestions.size === this.totalQuestions) {
-                        this._handleComplete();
-                    }
-                });
-            });
-        });
-    }
-
-    /**
-     * Handle quiz completion
-     */
-    _handleComplete() {
-        // Show continue button
-        const continueBtn = document.getElementById('continue-to-act2-debrief');
-        if (continueBtn) {
-            continueBtn.style.display = 'block';
-        }
-
-        if (this.onComplete) {
-            this.onComplete({
-                correct: this.correctAnswers,
-                total: this.totalQuestions
-            });
-        }
-    }
-
-    /**
-     * Reset quiz
-     */
-    reset() {
-        this.correctAnswers = 0;
-        this.answeredQuestions.clear();
-
-        const questions = document.querySelectorAll('.quiz-question');
-        questions.forEach(question => {
-            const buttons = question.querySelectorAll('.quiz-btn');
-            const feedback = question.querySelector('.feedback');
-
-            buttons.forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('correct', 'incorrect');
-            });
-
-            if (feedback) {
-                feedback.textContent = '';
-                feedback.className = 'feedback';
-            }
-        });
-
-        const continueBtn = document.getElementById('continue-to-act2-debrief');
-        if (continueBtn) {
-            continueBtn.style.display = 'none';
+            // 3 New Skulls (Percent-based coords)
+            // 10, 70 (10% right, 70% up from bottom)
+            this.ruinPositions.push({ x: w * 0.1, y: h * 0.3 });
+            // 40, 10 (40% right, 10% up from bottom)
+            this.ruinPositions.push({ x: w * 0.4, y: h * 0.9 });
+            // 60, 35 (60% right, 35% up from bottom)
+            this.ruinPositions.push({ x: w * 0.6, y: h * 0.65 });
         }
     }
 }
 
-// Export for use in other modules
+
 window.Act2Tipping = Act2Tipping;
-window.Act2Quiz = Act2Quiz;

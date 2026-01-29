@@ -41,7 +41,16 @@ class ResilienceLandscapesApp {
      * Set up navigation button listeners
      */
     _setupNavigationListeners() {
-        // Start button
+        // Initialize Act Navigation (Jump to Act)
+        const navBtns = document.querySelectorAll('.nav-link-btn');
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetAct = btn.dataset.act;
+                this.showAct(targetAct);
+            });
+        });
+
+        // Initialize Continue Buttons
         const startBtn = document.getElementById('start-btn');
         if (startBtn) {
             startBtn.addEventListener('click', this._onStartClick);
@@ -51,9 +60,7 @@ class ResilienceLandscapesApp {
         const continueToIntermission = document.getElementById('continue-to-intermission');
         if (continueToIntermission) {
             continueToIntermission.addEventListener('click', () => {
-                this._hideAllSections();
-                this._showSection('intermission');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                this._startAct(2);
             });
         }
 
@@ -62,6 +69,18 @@ class ResilienceLandscapesApp {
             sendFeedbackBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const form = document.querySelector('form[name="act1-feedback"]');
+
+                // Honeypot check - if filled, silently abort (don't alert bots)
+                const honeypot = document.getElementById('website');
+                if (honeypot && honeypot.value) {
+                    console.log('Bot detected via honeypot');
+                    // Show fake success to not alert bot
+                    const thanksEl = document.getElementById('feedback-thanks');
+                    if (thanksEl) thanksEl.style.display = 'block';
+                    sendFeedbackBtn.disabled = true;
+                    sendFeedbackBtn.textContent = 'Shared';
+                    return;
+                }
 
                 // Submit to Netlify via AJAX
                 fetch("/", {
@@ -84,11 +103,84 @@ class ResilienceLandscapesApp {
             });
         }
 
+        const continueToAct2 = document.getElementById('continue-to-act2');
+        if (continueToAct2) {
+            continueToAct2.addEventListener('click', () => {
+                this._startAct(2);
+            });
+        }
+
         const continueToAct2Debrief = document.getElementById('continue-to-act2-debrief');
         if (continueToAct2Debrief) {
             continueToAct2Debrief.addEventListener('click', () => {
                 this._showSection('act2-debrief');
             });
+        }
+
+        // Act 2 feedback form
+        const sendAct2FeedbackBtn = document.getElementById('send-act2-feedback');
+        if (sendAct2FeedbackBtn) {
+            sendAct2FeedbackBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const form = document.querySelector('form[name="act2-feedback"]');
+
+                // Honeypot check
+                const honeypot = document.getElementById('website-act2');
+                if (honeypot && honeypot.value) {
+                    console.log('Bot detected via honeypot (act2)');
+                    const thanksEl = document.getElementById('act2-feedback-thanks');
+                    if (thanksEl) thanksEl.style.display = 'block';
+                    sendAct2FeedbackBtn.disabled = true;
+                    sendAct2FeedbackBtn.textContent = 'Shared';
+                    return;
+                }
+
+                // Submit to Netlify
+                fetch("/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams(new FormData(form)).toString(),
+                })
+                    .then(() => {
+                        console.log('Act 2 Feedback submitted');
+                        const thanksEl = document.getElementById('act2-feedback-thanks');
+                        if (thanksEl) thanksEl.style.display = 'block';
+                        sendAct2FeedbackBtn.disabled = true;
+                        sendAct2FeedbackBtn.textContent = 'Shared';
+                    })
+                    .catch((error) => console.error('Feedback submission error:', error));
+            });
+        }
+
+        // Act 2 Reflection (Sensitivity Demo)
+        const reflectForm = document.querySelector('form[name="act2-reflection"]');
+        if (reflectForm) {
+            const submitBtn = reflectForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Submit to Netlify
+                    fetch("/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: new URLSearchParams(new FormData(reflectForm)).toString(),
+                    })
+                        .then(() => {
+                            console.log('Act 2 Reflection submitted');
+                            // Move to Quiz
+                            this._hideAllSections();
+                            this._showSection('act2-quiz');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        })
+                        .catch((error) => {
+                            console.error('Feedback submission error:', error);
+                            // Move on anyway
+                            this._hideAllSections();
+                            this._showSection('act2-quiz');
+                        });
+                });
+            }
         }
 
         const continueToAct3 = document.getElementById('continue-to-act3');
@@ -140,19 +232,7 @@ class ResilienceLandscapesApp {
                 break;
             case 2:
                 this._showSection('act2');
-                this._initAct2();
-                break;
-            case 3:
-                this._showSection('act3');
-                this._initAct3();
-                break;
-            case 4:
-                this._showSection('act4');
-                this._initAct4();
-                break;
-            case 5:
-                this._showSection('act5');
-                this._initAct5();
+                this._initAct2(1); // Default to stage 1
                 break;
         }
 
@@ -194,11 +274,16 @@ class ResilienceLandscapesApp {
     /**
      * Initialize Act 2
      */
-    _initAct2() {
+    _initAct2(stage = 1) {
         if (!this.act2) {
             this.act2 = new Act2Tipping();
         }
-        this.act2.init('act2a-canvas', 'act2b-canvas');
+        this.act2.init('act2-canvas', stage);
+
+        this.act2.onBothTipped = () => {
+            // Act 2 already handles showing the next section usually
+            // but we can ensure it here
+        };
 
         if (!this.act2Quiz) {
             this.act2Quiz = new Act2Quiz();
@@ -270,10 +355,7 @@ class ResilienceLandscapesApp {
             'intro',
             'act1', 'act1-debrief',
             'act2', 'act2-quiz', 'act2-debrief',
-            'intermission',
-            'act3', 'act3-debrief',
-            'act4', 'act4-debrief',
-            'act5', 'final-debrief'
+            'intermission'
         ];
 
         sections.forEach(id => {
@@ -290,9 +372,24 @@ class ResilienceLandscapesApp {
     _stopAllActs() {
         if (this.act1) this.act1.stop();
         if (this.act2) this.act2.stop();
-        if (this.act3) this.act3.stop();
-        if (this.act4) this.act4.stop();
-        if (this.act5) this.act5.stop();
+    }
+
+    /**
+     * Show a specific act and hide others
+     */
+    showAct(actId) {
+        console.log('Jump to act stage:', actId);
+        this._stopAllActs();
+        this._hideAllSections();
+
+        if (actId === 'act1') {
+            this._showSection('act1');
+            this._initAct1();
+        } else if (actId.startsWith('act2-s')) {
+            const stage = parseInt(actId.substring(6));
+            this._showSection('act2');
+            this._initAct2(stage);
+        }
     }
 
     /**
@@ -304,10 +401,6 @@ class ResilienceLandscapesApp {
         // Reset all acts
         if (this.act1) this.act1.reset();
         if (this.act2) this.act2.reset();
-        if (this.act2Quiz) this.act2Quiz.reset();
-        if (this.act3) this.act3.reset();
-        if (this.act4) this.act4.reset();
-        if (this.act5) this.act5.reset();
 
         // Reset state
         this.currentAct = 0;
@@ -327,9 +420,6 @@ class ResilienceLandscapesApp {
         this._stopAllActs();
         if (this.act1) this.act1.destroy();
         if (this.act2) this.act2.destroy();
-        if (this.act3) this.act3.destroy();
-        if (this.act4) this.act4.destroy();
-        if (this.act5) this.act5.destroy();
     }
 }
 

@@ -29,19 +29,23 @@
 
         <!-- Introduction -->
         <section class="narrative-section" id="intro">
-            <p>
+            <p>You are most warmly welcome!</p>
+			<p>
                 Complex systems science offers a powerful conceptual tool to map transition dynamics: the attractor
-                landscape. Imagine a pool table with a single billiard ball. Each position on the table represents a
+                landscape. Imagine a pool table with a single billiard ball. Each position (i.e. coordinate) on the table represents a
                 possible state for the system, and the current status is represented by the location of the billiard
-                ball. Now imagine the surface isn’t flat, but contains hills and valleys. The valleys represent stable
+                ball.
+            </p>
+            <p>
+                Now imagine the surface isn’t flat, but contains hills and valleys. The valleys represent stable
                 patterns – the attractors, collections of similar states that “trap” the ball. It’s easy for the ball to
                 settle into a valley; it requires more effort or perturbation to push it out. The ridges between valleys
-                are called <strong>tipping points</strong>. And sometimes, hidden in the fog, there are cliffs that lead
+                are called <strong>tipping points</strong>. And somewhere, there is danger that leads
                 to state of permanent destruction; <strong>ruin</strong>.
             </p>
             <p>
                 Perhaps your couch is an attractor for you. Maybe a new exercise regime is the opposite; an unsteady
-                state, repellor, that's hard to maintain.
+                state, repellor, that's hard to maintain. Curing munchies with rat poison would be ruin.
             </p>
             <p>
                 Thinking in terms of attractor landscapes can take your thinking past flowcharts suggesting neat, linear
@@ -57,13 +61,34 @@
                 In the next few minutes, you'll learn:
             </p>
             <ul class="learning-goals">
-                <li>Hysteresis: Why it's <em>easier to fall</em> into bad states than to climb out</li>
-                <li>[Other cool stuff connecting theory with practice, once I get it done]</li>
+                <li><strong>Hysteresis</strong>: Why it's <em>easier to fall</em> into bad states than to climb out</li>
+                <li><strong>Nudge-induced Tipping</strong>: Changing a system by <em>kicking it around</em></li>
+                <li><strong>Substrate-induced Tipping</strong>: Changing a system by changing the landscape it operates
+                    in</li>
+                <li><strong>Ruin risks</strong>: The points of no return</li>
+                <li><strong>Domain dependence</strong>: The usefulness of linear thinking depends on context</li>
             </ul>
+            <p>
+                (To learn more, see this <a href="https://ncase.me/attractors" target="_blank">explorable</a>, this
+                <a href="http://mattiheino.com/sense-of-safety" target="_blank">blog post</a>, this <a
+                    href="https://doi.org/10.3389/fpsyg.2024.1346542" target="_blank">study on strategy and
+                    communications</a>, or this <a href="https://doi.org/10.1080/17437199.2022.2146598"
+                    target="_blank">study on behaviour change</a>)
+            </p>
             <p>
                 Ready? Let's begin.
             </p>
             <button class="start-button" id="start-btn">Start the Journey</button>
+
+            <div class="act-navigation" style="margin: 2rem 0; padding: 1rem; background: #f0f7f6; border-radius: 8px;">
+                <p style="margin-top: 0; font-weight: bold; color: #00796b;">Jump to Stage:</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="nav-link-btn" data-act="act1">Act 1: The Trap</button>
+                    <button class="nav-link-btn" data-act="act2-s1">Act 2: Stage 1</button>
+                    <button class="nav-link-btn" data-act="act2-s2">Act 2: Stage 2</button>
+                    <button class="nav-link-btn" data-act="act2-s3">Act 2: Stage 3</button>
+                </div>
+            </div>
         </section>
 
         <!-- Act 1: The Trap (Hysteresis) -->
@@ -101,12 +126,12 @@
                 <p>
                     This asymmetry is called <strong>hysteresis</strong>.
                 </p>
-                <blockquote>
-                    "In disaster terms: communities lose trust quickly but rebuild it slowly.
-                    It's easy to fall into bad states, expensive to escape."
-                </blockquote>
                 <p>
-                    Think of a neighborhood that loses its last grocery store.
+                    For example: Communities lose trust quickly but rebuild it slowly.
+                    It's easy to fall into bad states, expensive to escape.
+                </p>
+                <p>
+                    Or think of a neighborhood that loses its last grocery store.
                     Residents leave. Property values drop. Getting a new store?
                     That requires <em>reversing</em> a downward spiral – far harder than the initial decline.
                 </p>
@@ -118,14 +143,9 @@
                 </p>
                 <p>
                     Notice that by moving the ball to the adjacent tiles, you did something very important. You took
-                    steps to the "adjacent possible" state; a place you could get from where you currently were. This
+                    steps to the <strong>"adjacent possible"</strong> state; a place you could get from where you
+                    currently were. This
                     will be explored as we move further.
-                </p>
-                <p>
-                    To learn more, see this <a href="https://ncase.me/attractors" target="_blank">explorable</a>, this
-                    <a href="http://mattiheino.com/sense-of-safety" target="_blank">blog post</a>, this <a
-                        href="https://doi.org/10.3389/fpsyg.2024.1346542" target="_blank">study on strategy and communications</a>, or this <a href="https://doi.org/10.1080/17437199.2022.2146598"
-                        target="_blank">study on behaviour change</a>.
                 </p>
                 <button class="continue-btn" id="continue-to-intermission">Continue →</button>
             </div>
@@ -144,6 +164,13 @@
                     <input type="hidden" name="form-name" value="act1-feedback" />
                     <input type="hidden" name="attempts" id="stats-attempts" value="1" />
                     <input type="hidden" name="nudges_out" id="stats-nudges-out" value="0" />
+
+                    <!-- Honeypot field - hidden from humans, visible to bots -->
+                    <div class="ohnohoney">
+                        <label for="website">Website</label>
+                        <input type="text" name="website" id="website" autocomplete="off" tabindex="-1" />
+                    </div>
+
                     <textarea name="feedback" id="user-feedback" placeholder="Share your thoughts here..."
                         style="width: 100%; min-height: 120px; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
                     <button type="submit" class="continue-btn" id="send-feedback-btn">Share Thoughts</button>
@@ -152,51 +179,257 @@
                     </p>
                 </form>
 
-                <div class="coming-soon"
-                    style="background: #f8f9fa; padding: 2rem; border-radius: 12px; border: 1px dashed #ccc; text-align: center;">
-                    <h3>Act 2: [TBA]</h3>
-                    <p>Coming up later!</p>
-                </div>
+                <button class="continue-btn" id="continue-to-act2" style="margin-top: 1rem;">Continue to Act 2
+                    →</button>
             </div>
         </section>
 
-        <!-- Act 2: Two Ways to Tip -->
+        <!-- Act 2: Changing the Landscape -->
         <section class="act-section" id="act2" style="display: none;">
-            <h2>Act 2: Two Ways to Tip</h2>
-            <div class="act-content">
-                <p class="instruction">
-                    Systems can fail in two fundamentally different ways.
-                    Experiment with both to understand the difference.
-                </p>
-                <div class="dual-simulation">
-                    <div class="sim-panel">
-                        <h3>Grid A: Random Shocks</h3>
-                        <canvas id="act2a-canvas"></canvas>
-                        <div class="controls">
-                            <label for="noise-slider">Noise Level:</label>
-                            <input type="range" id="noise-slider" min="0" max="100" value="0">
-                            <span id="noise-value">0%</span>
-                        </div>
-                        <p class="sim-description">The landscape is stable. Only random shocks can push the ball into
-                            ruin.</p>
-                        <div class="tipping-label" id="n-tip-label" style="display: none;">
-                            <strong>N-Tipping:</strong> The system was stable. Bad luck struck.
-                        </div>
+            <h2>Act 2: Changing the Landscape</h2>
+
+            <div id="act2-narrative-overlay" class="narrative-overlay">
+                <!-- Screen 1: System Definition -->
+                <div id="act2-screen-setup" class="screen active">
+                    <h3>Define your System</h3>
+                    <p>Before we begin, think of a system you care about, and which is trying to reach some goal
+                        – this could be e.g. yourself, or your community, city, or organisation. Let's
+                        imagine the <strong>ball</strong> is that system.</p>
+
+                    <div class="input-group">
+                        <label>What is your system?</label>
+                        <input type="text" id="act2-input-system" placeholder="e.g. Townsville" />
                     </div>
-                    <div class="sim-panel">
-                        <h3>Grid B: Eroding Landscape</h3>
-                        <canvas id="act2b-canvas"></canvas>
-                        <div class="controls">
-                            <button id="time-passes-btn">⏳ Time Passes</button>
-                            <span id="erosion-count">Erosion cycles: 0</span>
-                        </div>
-                        <p class="sim-description">Noise is low, but the valley slowly erodes with each passing moment.
-                        </p>
-                        <div class="tipping-label" id="b-tip-label" style="display: none;">
-                            <strong>B-Tipping:</strong> The system lost resilience. The landscape changed beneath you.
-                        </div>
+
+                    <p>Now, what is a desirable state – a <strong>goal</strong> – this system is striving for? This will
+                        be
+                        represented by the <strong>star</strong> (⭐) on your landscape.</p>
+
+                    <div class="input-group">
+                        <label>What is the goal the system is reaching for?</label>
+                        <input type="text" id="act2-input-goal"
+                            placeholder="e.g. Ability to survive a 1-week electricity outage" />
                     </div>
+
+                    <button class="continue-btn" id="act2-btn-next-1">Next</button>
                 </div>
+
+                <!-- Screen 2: Landscape Mechanics -->
+                <div id="act2-screen-concepts" class="screen">
+                    <h3>The Landscape of States</h3>
+                    <p>In this view, each coordinate on the landscape represents a possible "state" of your system.</p>
+                    <p><strong>Valleys</strong> are attractors: collections of coordinates that naturally pull the
+                        system toward
+                        them. If <span class="val-goal">your goal</span> is a set of states in an attractor, it's easy
+                        to maintain it.</p>
+                    <p><strong>Ridges</strong> are "repellors": unstable or difficult states that push the system away.
+                        If <span class="val-goal">your goal</span> is a set of states in a repellor, it's difficult to
+                        maintain it.
+                    </p>
+                    <p>But navigation is not necessarily about moving the ball directly – it could be about shaping the
+                        landscape of
+                        possibilities, as we'll see next.</p>
+                    <button class="continue-btn" id="act2-btn-next-2">Next</button>
+                </div>
+
+                <!-- Screen 3: N-Tipping (Observation) -->
+                <div id="act2-screen-observation" class="screen">
+                    <h3>Stability goes bye-bye in the wild!</h3>
+                    <p>In act 1 you had perfect control of the ball, and the environment was static.</p>
+                    <p>But living systems don't exist in a vacuum. They are constantly influenced by external
+                        and internal events, including shocks and interactions with their environment.</p>
+                    <p>Watch how the smaller events – vibrations – and larger shocks, depicted by <strong>red
+                            arrows</strong>, nudge <span class="val-system">your system</span>
+                        in its space of possibilities.
+                        Just observe how it drifts through its current environment.</p>
+                    <button class="continue-btn" id="act2-btn-ready">Begin Observation</button>
+                </div>
+
+                <!-- Screen 4: B-Tipping Prompt -->
+                <div id="act2-screen-play-prompt" class="screen">
+                    <h3>Reshaping the Path</h3>
+                    <p>Now it's your turn. To help <span class="val-system">the system</span> reach <span
+                            class="val-goal">the goal</span>, you must reshape the terrain itself. But first, a few
+                        concepts.</p>
+                    <p>When real systems abruptly change their state ("tip"), it happens by one or both of the following
+                        processes:</p>
+                    <p>
+                        <strong>N-Tipping</strong> ("noise-induced"): In Act 1, you nudged the system over a tipping
+                        point, and it fell into the attractor valley.
+                    </p>
+                    <p>
+                        <strong>B-tipping</strong> ("bifurcation-induced"): Here tipping occurs, when what the landscape
+                        allows, is changed.
+                    </p>
+                    <p>In what follows, you're acting more as a steward than a driver of the system. <strong>Stamp the
+                            terrain</strong> (click to lift/lower) to create a path of attractors – and
+                        remove the repellors standing in the way.</p>
+                    <button class="continue-btn" id="act2-btn-start">Start stewarding</button>
+                </div>
+
+                <!-- Screen 5: Strategic Debrief (Retry 1) -->
+                <div id="act2-screen-strategy" class="screen">
+                    <h3>Success!</h3>
+                    <p>You reached <span class="val-goal">the goal</span> in <span class="val-clicks">X</span> stamps.
+                    </p>
+                    <p>But can we be more strategic? Often, it's more effective to first <strong>lower terrain below the
+                            goal</strong>
+                        deeply, then <strong>craft a valley backwards</strong> from the goal to wherever the ball now
+                        is.</p>
+                    <p>You can also <strong>raise the areas</strong> where you <em>don't</em> want the system to go, to
+                        make negative movement harder.</p>
+                    <p><strong>Warning:</strong> Notice that a skull has emerged in the landscape. This is a state of
+                        destruction called
+                        <strong>ruin</strong>.
+                        Hitting ruin means game over!
+                    </p>
+                    <button class="continue-btn" id="act2-btn-replay-1">Let's go!</button>
+                </div>
+
+                <!-- Screen 6: Strategic Learning (Retry 2) -->
+                <div id="act2-screen-comparison" class="screen">
+                    <div id="comparison-result">
+                        <!-- Dynamic text -->
+                    </div>
+                    <p>Working backwards from a goal is what people mean when they say <em>"begin with the end in
+                            mind"</em>.</p>
+                    <p>There was uncertainty about where the ball would be by the time your "canal"
+                        was finished, but you were able to hold off the final part of the construction to the last
+                        minute.</p>
+                    <p><strong>But there's a
+                            catch:</strong> This strategy works because the landscape and the goal are stable, and you
+                        can invest your resources ("stamps") up front, knowing they will pay dividents later.</p>
+                    <p>Try using the same "working backwards" strategy again, but <strong>beware:</strong>
+                        There are now many more coordinates that instill ruin.</p>
+                    <p>In complex systems, preventing ruin is imperative:
+                    <blockquote><strong>"The first rule of life is not to die."</strong></blockquote>
+                    This is because destruction nullifies all your potential future wins. Hence, take risks but cut your
+                    downside.</p>
+                    <p>You can do this by <strong>immediately raising the terrain</strong> below ruin states.</p>
+                    <p>Do this first, then carry on with the "working backwards from the goal" strategy.</p>
+                    <button class="continue-btn" id="act2-btn-replay-2">Start Final Try</button>
+                </div>
+
+                <!-- Screen 7: Act 2 Stage 2 Surprise (Uh-oh) -->
+                <div id="act2-screen-s2-surprise" class="screen">
+                    <h3>Uh-oh!</h3>
+                    <p>Something has profoundly shifted!</p>
+                    <p>What was once your <strong>Goal</strong> (⭐) has collapsed into a <strong>Ruin</strong> (💀).
+                        Reaching it now means failure for <span class="val-system">the system</span>.</p>
+                    <p>This is what often happens in the real  world; today's goals can be tomorrow's stray paths.</p>
+					<p>Your new <strong>Goal</strong> has moved to the North-West. You must pivot your landscaping
+                        strategy
+                        immediately to avoid disaster!</p>
+                    <button class="continue-btn" id="act2-s2-btn-pivot">Pivot, quickly!</button>
+                </div>
+
+                <!-- Screen 7: Final Stage Debrief -->
+                <div id="act2-screen-final" class="screen">
+                    <h3>Master of Landscapes</h3>
+                    <p>You've demonstrated that systemic change isn't just about pushing harder, but changing shape of
+                        the possibilities – which states (i.e. coordinates) are easy to arrive at, and which are more
+                        difficult.</p>
+                    <blockquote>"Changing the landscape changes the future."</blockquote>
+					<p>You've seen that strategies such as "beginning with the end in mind" and working backwards can be effective, but only in the appropriate context; in this case, stability. Conversely, in stable terrains, moving the ball by only shifting the area directly around it, can be very wasteful.</p>
+                    <p>By moulding what's possible, you enabled positive B-tipping and mastered the first stage of
+                        managing resilience landscapes.</p>
+                    <p>There's one more thing to see here. Observe how the ball doesn't always drop to the same
+                        direction.
+                    </p>
+                    <button class="continue-btn" id="act2-btn-complete">Show me.</button>
+                </div>
+
+                <!-- Screen 8: Stage 2 Intro -->
+                <div id="act2-screen-s2-intro" class="screen">
+                    <h3>Stage 2: The Evolving Landscape</h3>
+                    <p>Now that you've mastered the basics of B-tipping, let's refine your approach.</p>
+                    <p>Remember the strategy: First <strong>lower terrain below the goal</strong>, then <strong>craft a
+                            valley backwards</strong> to the system's current state. Finally, <strong>raise the
+                            areas</strong> you want to avoid.</p>
+                    <p>Ready to steward <span class="val-system">the system</span> through this next challenge?</p>
+                    <button class="continue-btn" id="act2-s2-btn-start">Start Stage 2</button>
+                </div>
+
+                <!-- Screen 8: Act 2 Stage 2 Failure -->
+                <div id="act2-screen-s2-failed" class="screen">
+                    <h3>System Collapse</h3>
+                    <p><span class="val-system">The system</span> reached the <strong>Ruin</strong> state. This is a
+                        point of no return from which the system cannot recover.</p>
+                    <p>In complex systems, preventing ruin is imperative: "The first rule of life is not to die."</p>
+                    <p>This is because destruction nullifies all your potential future wins. Hence, take risks but cut
+                        your downside.</p>
+                    <button class="continue-btn" id="act2-s2-btn-retry">Try Again</button>
+                </div>
+
+                <!-- Sensitivity Demo: Retry Overlay -->
+                <div id="act2-screen-sensitivity-retry" class="screen">
+                    <h3>Sensitivity Check</h3>
+                    <p>Watch the ball roll again from the <strong>exact same starting position</strong>.</p>
+                    <p>If the system isn't sensitive to initial conditions, it should follow the <em>exact same
+                            path</em>.</p>
+                    <button class="continue-btn" id="act2-sens-btn-retry">Start Next Run</button>
+                </div>
+
+                <!-- Sensitivity Demo: Explanation -->
+                <div id="act2-screen-sensitivity-explainer" class="screen">
+                    <h3>Sensitivity to Initial Conditions</h3>
+                    <p>Even though the ball started at the exact same spot, tiny microscopic differences (noise) caused
+                        it to take a completely different path.</p>
+                    <p>This is the hallmark of chaos: <strong>Sensitivity to Initial Conditions</strong> (AKA "the
+                        butterfly
+                        effect").</p>
+                    <p>When you deal with the nuances of complex systems, you cannot predict their future path,
+                        because
+                        you can never measure the current state precisely enough to account for all minute
+                        eventualities.</p>
+                    <button class="continue-btn" id="act2-explainer-btn-next">Continue</button>
+                </div>
+
+                <!-- Questionnaire -->
+                <div id="act2-screen-questionnaire" class="screen">
+                    <h3>Reflection</h3>
+                    <p>Help us understand how these concepts apply to your system.</p>
+
+                    <form name="act2-reflection" method="POST" netlify data-netlify="true" class="feedback-form"
+                        style="display: block;">
+                        <input type="hidden" name="form-name" value="act2-reflection" />
+
+                        <label style="display:block; margin-top:1rem; font-weight:bold;">1. Ruin States</label>
+                        <p style="font-size:0.9rem; margin-bottom:0.5rem;">What might be a "ruin state" (point of no
+                            return) for <span class="val-system">your system</span>?</p>
+                        <textarea name="ruin_examples"
+                            placeholder="e.g. Bankruptcy, ecological collapse, loss of trust..."
+                            style="width: 100%; min-height: 60px;"></textarea>
+
+                        <label style="display:block; margin-top:1rem; font-weight:bold;">2. Adjacent Possible</label>
+                        <p style="font-size:0.9rem; margin-bottom:0.5rem;">If <span class="val-system">your
+                                system</span> is your system and <span class="val-goal">the goal</span> is a goal...
+                            what is a positive "adjacent possible" state available right now? E.g. for a person who's looking to increase their physical activity, this could be going out for one extra walk every week.</p>
+                        <textarea name="adjacent_possible" placeholder="A state one step from where you're at"
+                            style="width: 100%; min-height: 60px;"></textarea>
+
+                        <div style="margin-top:1rem;">
+                            <label style="display:flex; align-items:center; gap:0.5rem;">
+                                <input type="checkbox" name="cant_think_of_anything" value="yes">
+                                <span>I can't think of anything right now.</span>
+                            </label>
+                        </div>
+
+                        <p style="font-size: 0.8rem; color: #666; margin-top: 1rem;">
+                            Privacy Note: Your responses are anonymous and help us improve this educational tool. Avoid
+                            sharing data from which you or others could be identified.
+                        </p>
+
+                        <button type="submit" class="continue-btn" style="margin-top:1rem;">Submit & Continue</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="act-content">
+                <div id="act2-canvas-wrapper" style="position: relative;">
+                    <canvas id="act2-canvas"></canvas>
+                </div>
+
             </div>
         </section>
 
@@ -231,25 +464,51 @@
         <!-- Act 2 Debrief -->
         <section class="debrief-section" id="act2-debrief" style="display: none;">
             <div class="debrief-content">
-                <h3>Two Paths to Failure</h3>
+                <h3>Two Paths Towards Change</h3>
                 <p>
-                    <strong>N-Tipping</strong> (noise-induced): A stable system hit by bad luck.
-                    The landscape was fine—a large random shock just pushed the ball over the edge.
+                    <strong>N-Tipping</strong> (noise-induced): Everything seemed stable.
+                    Then a shock pushed the ball over the edge.
                 </p>
                 <p>
                     <strong>B-Tipping</strong> (bifurcation-induced): The landscape itself changed.
-                    The valley eroded until even a gentle breeze was enough to tip the ball.
+                    The valley eroded until even a gentle breeze was enough to move the ball.
                 </p>
                 <blockquote>
-                    "Prevention strategies differ. For N-tipping, you build buffers against shocks.
-                    For B-tipping, you monitor whether the landscape itself is changing."
+                    We can think of Black Swans – unexpected extreme events with big consequences – as cases of
+                    N-tipping. The COVID-19 pandemic would be one for most people (although it wasn't a surprise for the
+                    initiated). N-tipping is not always bad; winning the lottery would count, too.<br>
+                    For other things, there is no perceptible change as we sit in an attractor, but its resilience
+                    slowly erodes – until suddenly the formerly-stable state is destabilised. Such periods of
+                    b-tipping-induced instability are times of both opportunity and danger.
                 </blockquote>
                 <p>
-                    Most catastrophic failures involve <em>both</em>:
+                    Most abrupt changes involve <em>both</em>: Consider
                     a system weakened by gradual erosion, finished off by a shock that
                     wouldn't have mattered years earlier.
                 </p>
-                <button class="continue-btn" id="continue-to-act3">Continue →</button>
+
+                <p style="margin-top: 2rem;">What did you think about Act 2?</p>
+                <form name="act2-feedback" method="POST" netlify data-netlify="true" class="feedback-form"
+                    style="margin: 1rem 0;">
+                    <input type="hidden" name="form-name" value="act2-feedback" />
+                    <input type="hidden" name="act" value="act2" />
+
+                    <!-- Honeypot field -->
+                    <div class="ohnohoney">
+                        <label for="website-act2">Website</label>
+                        <input type="text" name="website" id="website-act2" autocomplete="off" tabindex="-1" />
+                    </div>
+
+                    <textarea name="feedback" placeholder="Share your thoughts..."
+                        style="width: 100%; min-height: 100px; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
+                    <button type="submit" class="continue-btn" id="send-act2-feedback">Share Thoughts</button>
+                    <p id="act2-feedback-thanks"
+                        style="display: none; color: #4db6ac; font-weight: bold; margin-top: 1rem;">
+                        Thanks for sharing!
+                    </p>
+                </form>
+
+                <button class="continue-btn" id="continue-to-act3">Continue to Act 3 → [UNDER CONSTRUCTION!]</button>
             </div>
         </section>
 
@@ -481,21 +740,20 @@
                     </p>
                 </div>
 
-                <button class="restart-btn" id="restart-btn">↻ Start Over</button>
-            </div>
-        </section>
-    </main>
-
-    <!-- Scripts -->
-    <script src="js/hexGrid.js"></script>
-    <script src="js/ball.js"></script>
-    <script src="js/fog.js"></script>
-    <script src="js/acts/act1-trap.js"></script>
-    <script src="js/acts/act2-tipping.js"></script>
-    <script src="js/acts/act3-wobble.js"></script>
-    <script src="js/acts/act4-panic.js"></script>
-    <script src="js/acts/act5-governor.js"></script>
-    <script src="js/main.js"></script>
+                <!-- Scripts -->
+                <script src="js/hexGrid.js"></script>
+                <script src="js/perlin.js"></script>
+                <script src="js/terrain.js"></script>
+                <script src="js/ball.js"></script>
+                <script src="js/fog.js"></script>
+                <script src="js/acts/act1-trap.js"></script>
+                <script src="js/acts/act2-landscape-data.js"></script>
+                <script src="js/acts/act2-tipping.js"></script>
+                <script src="js/acts/act2-quiz.js"></script>
+                <script src="js/acts/act3-wobble.js"></script>
+                <script src="js/acts/act4-panic.js"></script>
+                <script src="js/acts/act5-governor.js"></script>
+                <script src="js/main.js"></script>
 </body>
 
 </html>
