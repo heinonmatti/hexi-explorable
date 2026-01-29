@@ -28,32 +28,30 @@ class Act2Quiz {
         const answer = btn.dataset.answer;
         const correct = questionEl.dataset.correct;
         const feedbackEl = questionEl.querySelector('.feedback');
-
-        // Disable buttons in this question
         const btns = questionEl.querySelectorAll('.quiz-btn');
-        btns.forEach(b => b.disabled = true);
+
+        // Clear previous incorrect markers in this question
+        btns.forEach(b => b.classList.remove('incorrect'));
 
         if (answer === correct) {
+            // Disable buttons in this question ONLY when correct
+            btns.forEach(b => b.disabled = true);
             btn.classList.add('correct');
             feedbackEl.textContent = "Correct! " + this._getExplanation(answer);
             feedbackEl.className = 'feedback success';
+            this.answeredCount++;
+            this._checkCompletion();
         } else {
             btn.classList.add('incorrect');
-            // Highlight the correct one
-            btns.forEach(b => {
-                if (b.dataset.answer === correct) b.classList.add('correct');
-            });
-            feedbackEl.textContent = "Not quite. " + this._getExplanation(correct);
+            feedbackEl.textContent = "Perhaps... But there's a better answer. Try again!";
             feedbackEl.className = 'feedback error';
         }
-
-        this.answeredCount++;
-        this._checkCompletion();
     }
 
     _getExplanation(type) {
         if (type === 'n') return "That was N-Tipping (a shock to a stable system).";
         if (type === 'b') return "That was B-Tipping (the system's resilience eroded).";
+        if (type === 'nb') return "That was both: slow erosion of resilience (B-Tipping) followed by a triggering shock (N-Tipping).";
         return "";
     }
 

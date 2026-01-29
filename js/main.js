@@ -39,12 +39,23 @@ class ResilienceLandscapesApp {
 
         // Check if has actual data (excluding technical/hidden fields)
         const formData = new FormData(form);
+
+        // Pre-populate system and goal if they exist in the form
+        const systemInput = form.querySelector('input[name="system"]');
+        const goalInput = form.querySelector('input[name="goal"]');
+        if (systemInput) systemInput.value = localStorage.getItem('hexi_act2_system') || '';
+        if (goalInput) goalInput.value = localStorage.getItem('hexi_act2_goal') || '';
+
+        // Refresh formData after pre-population
+        const updatedFormData = new FormData(form);
         let hasData = false;
-        for (let [name, value] of formData.entries()) {
+        for (let [name, value] of updatedFormData.entries()) {
             if (name !== 'form-name' &&
                 name !== 'act' &&
                 name !== 'website' &&
                 name !== 'cant_think_of_anything' &&
+                name !== 'system' &&
+                name !== 'goal' &&
                 value.trim() !== '') {
                 hasData = true;
                 break;
@@ -61,7 +72,7 @@ class ResilienceLandscapesApp {
             await fetch("/", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(formData).toString(),
+                body: new URLSearchParams(updatedFormData).toString(),
             });
             console.log(`✅ Form ${form.name} submitted`);
             form.dataset.submitted = 'true';

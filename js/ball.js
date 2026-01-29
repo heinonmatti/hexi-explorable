@@ -339,5 +339,23 @@ class Ball {
         if (!this.grid || typeof this.grid.getHexAtPixel !== 'function') return null;
         return this.grid.getHexAtPixel(this.x, this.y);
     }
+
+    /**
+     * Reset the ball to a specific grid position (for Act 1)
+     * @param {number} col 
+     * @param {number} row 
+     */
+    reset(col, row) {
+        if (!this.grid || typeof this.grid.hexToPixel !== 'function') return;
+        const pos = this.grid.hexToPixel(col, row);
+        this.x = pos.x;
+        this.y = pos.y;
+        this.vx = 0;
+        this.vy = 0;
+        this.trail = [];
+        this.positionHistory = [];
+        this.isInRuin = false;
+        this._isMovingDiscrete = false;
+    }
 }
 window.Ball = Ball;
