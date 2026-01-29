@@ -29,10 +29,11 @@
 
         <!-- Introduction -->
         <section class="narrative-section" id="intro">
-            <p>You are most warmly welcome!</p>
-			<p>
+            <p><strong>A warm welcome to the world of attractor landscapes!</strong></p>
+            <p>
                 Complex systems science offers a powerful conceptual tool to map transition dynamics: the attractor
-                landscape. Imagine a pool table with a single billiard ball. Each position (i.e. coordinate) on the table represents a
+                landscape. Imagine a pool table with a single billiard ball. Each position (i.e. coordinate) on the
+                table represents a
                 possible state for the system, and the current status is represented by the location of the billiard
                 ball.
             </p>
@@ -84,9 +85,9 @@
                 <p style="margin-top: 0; font-weight: bold; color: #00796b;">Jump to Stage:</p>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="nav-link-btn" data-act="act1">Act 1: The Trap</button>
-                    <button class="nav-link-btn" data-act="act2-s1">Act 2: Stage 1</button>
-                    <button class="nav-link-btn" data-act="act2-s2">Act 2: Stage 2</button>
-                    <button class="nav-link-btn" data-act="act2-s3">Act 2: Stage 3</button>
+                    <button class="nav-link-btn" data-act="act2-s1">Act 2: Shaping the Terrain</button>
+                    <button class="nav-link-btn" data-act="act2-s2">Act 2: Dodging Ruin</button>
+                    <button class="nav-link-btn" data-act="act2-s3">Act 2: Sensitivity to Initial Conditions</button>
                 </div>
             </div>
         </section>
@@ -316,8 +317,8 @@
                     <p>Something has profoundly shifted!</p>
                     <p>What was once your <strong>Goal</strong> (⭐) has collapsed into a <strong>Ruin</strong> (💀).
                         Reaching it now means failure for <span class="val-system">the system</span>.</p>
-                    <p>This is what often happens in the real  world; today's goals can be tomorrow's stray paths.</p>
-					<p>Your new <strong>Goal</strong> has moved to the North-West. You must pivot your landscaping
+                    <p>This is what often happens in the real world; today's goals can be tomorrow's stray paths.</p>
+                    <p>Your new <strong>Goal</strong> has moved to the North-West. You must pivot your landscaping
                         strategy
                         immediately to avoid disaster!</p>
                     <button class="continue-btn" id="act2-s2-btn-pivot">Pivot, quickly!</button>
@@ -330,7 +331,10 @@
                         the possibilities – which states (i.e. coordinates) are easy to arrive at, and which are more
                         difficult.</p>
                     <blockquote>"Changing the landscape changes the future."</blockquote>
-					<p>You've seen that strategies such as "beginning with the end in mind" and working backwards can be effective, but only in the appropriate context; in this case, stability. Conversely, in stable terrains, moving the ball by only shifting the area directly around it, can be very wasteful.</p>
+                    <p>You've seen that strategies such as "beginning with the end in mind" and working backwards can be
+                        effective, but only in the appropriate context; in this case, stability. Conversely, in stable
+                        terrains, moving the ball by only shifting the area directly around it, can be very wasteful.
+                    </p>
                     <p>By moulding what's possible, you enabled positive B-tipping and mastered the first stage of
                         managing resilience landscapes.</p>
                     <p>There's one more thing to see here. Observe how the ball doesn't always drop to the same
@@ -366,14 +370,15 @@
                     <h3>Sensitivity Check</h3>
                     <p>Watch the ball roll again from the <strong>exact same starting position</strong>.</p>
                     <p>If the system isn't sensitive to initial conditions, it should follow the <em>exact same
-                            path</em>.</p>
+                            path</em>. Sometimes it acts similarly, other times it diverges wildly.</p>
                     <button class="continue-btn" id="act2-sens-btn-retry">Start Next Run</button>
                 </div>
 
                 <!-- Sensitivity Demo: Explanation -->
                 <div id="act2-screen-sensitivity-explainer" class="screen">
                     <h3>Sensitivity to Initial Conditions</h3>
-                    <p>Even though the ball started at the exact same spot, tiny microscopic differences (noise) caused
+                    <p>Even though the ball started at the exact same spot, tiny microscopic differences (and
+                        randomness) caused
                         it to take a completely different path.</p>
                     <p>This is the hallmark of chaos: <strong>Sensitivity to Initial Conditions</strong> (AKA "the
                         butterfly
@@ -382,6 +387,9 @@
                         because
                         you can never measure the current state precisely enough to account for all minute
                         eventualities.</p>
+                    <p>To learn more, see Table 1 <a
+                            href="https://www.tandfonline.com/doi/full/10.1080/17437199.2022.2146598"
+                            target="_blank">here</a>.</p>
                     <button class="continue-btn" id="act2-explainer-btn-next">Continue</button>
                 </div>
 
@@ -404,7 +412,9 @@
                         <label style="display:block; margin-top:1rem; font-weight:bold;">2. Adjacent Possible</label>
                         <p style="font-size:0.9rem; margin-bottom:0.5rem;">If <span class="val-system">your
                                 system</span> is your system and <span class="val-goal">the goal</span> is a goal...
-                            what is a positive "adjacent possible" state available right now? E.g. for a person who's looking to increase their physical activity, this could be going out for one extra walk every week.</p>
+                            what is a positive "adjacent possible" state available right now? E.g. for a person who's
+                            looking to increase their physical activity, this could be going out for one extra walk
+                            every week.</p>
                         <textarea name="adjacent_possible" placeholder="A state one step from where you're at"
                             style="width: 100%; min-height: 60px;"></textarea>
 
@@ -476,7 +486,7 @@
                 <blockquote>
                     We can think of Black Swans – unexpected extreme events with big consequences – as cases of
                     N-tipping. The COVID-19 pandemic would be one for most people (although it wasn't a surprise for the
-                    initiated). N-tipping is not always bad; winning the lottery would count, too.<br>
+                    initiated). N-tipping is not always bad; winning the lottery would count, too.<br><br>
                     For other things, there is no perceptible change as we sit in an attractor, but its resilience
                     slowly erodes – until suddenly the formerly-stable state is destabilised. Such periods of
                     b-tipping-induced instability are times of both opportunity and danger.
@@ -487,7 +497,6 @@
                     wouldn't have mattered years earlier.
                 </p>
 
-                <p style="margin-top: 2rem;">What did you think about Act 2?</p>
                 <form name="act2-feedback" method="POST" netlify data-netlify="true" class="feedback-form"
                     style="margin: 1rem 0;">
                     <input type="hidden" name="form-name" value="act2-feedback" />
@@ -499,13 +508,8 @@
                         <input type="text" name="website" id="website-act2" autocomplete="off" tabindex="-1" />
                     </div>
 
-                    <textarea name="feedback" placeholder="Share your thoughts..."
+                    <textarea name="feedback" id="act2-feedback-text" placeholder="Share your thoughts..."
                         style="width: 100%; min-height: 100px; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
-                    <button type="submit" class="continue-btn" id="send-act2-feedback">Share Thoughts</button>
-                    <p id="act2-feedback-thanks"
-                        style="display: none; color: #4db6ac; font-weight: bold; margin-top: 1rem;">
-                        Thanks for sharing!
-                    </p>
                 </form>
 
                 <button class="continue-btn" id="continue-to-act3">Continue to Act 3 → [UNDER CONSTRUCTION!]</button>
@@ -739,21 +743,53 @@
                         Inspired by <a href="https://ncase.me">Nicky Case's</a> explorable explanations.
                     </p>
                 </div>
+            </div>
+        </section>
 
-                <!-- Scripts -->
-                <script src="js/hexGrid.js"></script>
-                <script src="js/perlin.js"></script>
-                <script src="js/terrain.js"></script>
-                <script src="js/ball.js"></script>
-                <script src="js/fog.js"></script>
-                <script src="js/acts/act1-trap.js"></script>
-                <script src="js/acts/act2-landscape-data.js"></script>
-                <script src="js/acts/act2-tipping.js"></script>
-                <script src="js/acts/act2-quiz.js"></script>
-                <script src="js/acts/act3-wobble.js"></script>
-                <script src="js/acts/act4-panic.js"></script>
-                <script src="js/acts/act5-governor.js"></script>
-                <script src="js/main.js"></script>
+        <!-- End Screen -->
+        <section class="debrief-section" id="end-screen" style="display: none;">
+            <div class="debrief-content">
+                <h3>Thank You for Exploring!</h3>
+                <p>
+                    Thank you for taking the time to journey through these resilience landscapes.
+                </p>
+                <p>
+                    There are more acts to come! Future stages will explore even more strange and wonderful
+                    phenomena
+                    that prohibit direct control in real-world contexts, helping us better understand how to
+                    steward complex systems.
+                </p>
+                <p>
+                    Meanwhile, to learn more, see this <a href="https://ncase.me/attractors"
+                        target="_blank">explorable</a>, this
+                    <a href="http://mattiheino.com/sense-of-safety" target="_blank">blog post</a>, this <a
+                        href="https://doi.org/10.3389/fpsyg.2024.1346542" target="_blank">study on strategy and
+                        communications</a>, or this <a href="https://doi.org/10.1080/17437199.2022.2146598"
+                        target="_blank">study on behaviour change</a>.
+                </p>
+                <p>
+                    Take care!
+                </p>
+                <button class="continue-btn" id="restart-btn-end">Start Over</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/hexGrid.js"></script>
+    <script src="js/perlin.js"></script>
+    <script src="js/terrain.js"></script>
+    <script src="js/ball.js"></script>
+    <script src="js/fog.js"></script>
+    <script src="js/acts/act1-trap.js"></script>
+    <script src="js/acts/act2-landscape-data.js"></script>
+    <script src="js/acts/act2-tipping.js"></script>
+    <script src="js/acts/act2-quiz.js"></script>
+    <script src="js/acts/act3-wobble.js"></script>
+    <script src="js/acts/act4-panic.js"></script>
+    <script src="js/acts/act5-governor.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>

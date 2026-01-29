@@ -129,7 +129,9 @@ class Act2Tipping {
         this.activeShock = null;
 
         // Stage-specific setup
-        if (this.stageMode === 2 && this.stageAttempt === 3) {
+        if (this.stageMode === 3) {
+            this.startSensitivityDemo();
+        } else if (this.stageMode === 2 && this.stageAttempt === 3) {
             // Direct jump to ruin scenario
             this.state = 'playing';
             this._populateRuins();
@@ -934,7 +936,6 @@ class Act2Tipping {
 
     stop() {
         if (this.animationId) cancelAnimationFrame(this.animationId);
-        this.canvas = null;
     }
 
     reset() {

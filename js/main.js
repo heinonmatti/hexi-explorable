@@ -185,7 +185,10 @@ class ResilienceLandscapesApp {
 
         const continueToAct3 = document.getElementById('continue-to-act3');
         if (continueToAct3) {
-            continueToAct3.addEventListener('click', () => this._startAct(3));
+            continueToAct3.addEventListener('click', () => {
+                this._submitAct2Feedback();
+                this._startAct(3);
+            });
         }
 
         const continueToAct4 = document.getElementById('continue-to-act4');
@@ -202,6 +205,11 @@ class ResilienceLandscapesApp {
         const restartBtn = document.getElementById('restart-btn');
         if (restartBtn) {
             restartBtn.addEventListener('click', () => this._restart());
+        }
+
+        const restartBtnEnd = document.getElementById('restart-btn-end');
+        if (restartBtnEnd) {
+            restartBtnEnd.addEventListener('click', () => this._restart());
         }
     }
 
@@ -233,6 +241,9 @@ class ResilienceLandscapesApp {
             case 2:
                 this._showSection('act2');
                 this._initAct2(1); // Default to stage 1
+                break;
+            case 3:
+                this._showSection('end-screen');
                 break;
         }
 
@@ -348,21 +359,58 @@ class ResilienceLandscapesApp {
     }
 
     /**
-     * Hide all sections
+     * Hide all app sections (acts, debriefs, etc)
      */
     _hideAllSections() {
-        const sections = [
-            'intro',
-            'act1', 'act1-debrief',
-            'act2', 'act2-quiz', 'act2-debrief',
-            'intermission'
+        const sections = document.querySelectorAll('.act-section, .debrief-section, .quiz-section, .narrative-section');
+        sections.forEach(el => {
+            el.style.display = 'none';
+        });
+    }
+
+    /**
+     * Automatically submit any filled feedback forms for Act 2
+     */
+    _submitAct2Feedback() {
+        console.log('📤 Preparing automatic feedback submission...');
+        const forms = [
+            'form[name="act2-reflection"]',
+            'form[name="act2-feedback"]'
         ];
 
-        sections.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.display = 'none';
+        forms.forEach(selector => {
+            const form = document.querySelector(selector);
+            if (!form) return;
+
+            // Check if there's actual data to submit
+            const formData = new FormData(form);
+            let hasData = false;
+            for (let [name, value] of formData.entries()) {
+                // Ignore technical/hidden fields and empty strings
+                if (name !== 'form-name' &&
+                    name !== 'act' &&
+                    name !== 'website' &&
+                    name !== 'cant_think_of_anything' &&
+                    value.trim() !== '') {
+                    hasData = true;
+                    break;
+                }
+                // Handle checkbox explicitly if needed
+                if (name === 'cant_think_of_anything' && value === 'yes') {
+                    hasData = true;
+                    break;
+                }
             }
+
+            if (!hasData) return;
+
+            fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(formData).toString(),
+            })
+                .then(() => console.log(`✅ Feedback from ${selector} submitted`))
+                .catch((error) => console.error(`❌ Submission error for ${selector}:`, error));
         });
     }
 
