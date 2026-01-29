@@ -443,12 +443,8 @@ class Act1Trap {
         if (entryEl) entryEl.textContent = `${this.nudgesIn} nudge${this.nudgesIn !== 1 ? 's' : ''}`;
         if (exitEl) exitEl.textContent = `${this.nudgesOut} nudge${this.nudgesOut !== 1 ? 's' : ''}`;
 
-        // Show debrief
-        const debriefEl = document.getElementById('act1-debrief');
-        if (debriefEl) {
-            debriefEl.style.display = 'block';
-            debriefEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // Show debrief screen in overlay
+        this._showScreen('debrief');
 
         if (this.onComplete) {
             this.onComplete({
@@ -457,6 +453,28 @@ class Act1Trap {
                 ratio: this.nudgesOut / Math.max(1, this.nudgesIn)
             });
         }
+    }
+
+    _showScreen(screenId) {
+        const overlay = document.getElementById('act1-narrative-overlay');
+        const screen = document.getElementById(`act1-screen-${screenId}`);
+
+        if (!overlay || !screen) {
+            console.warn(`Narrative screen or overlay not found: ${screenId}`);
+            return;
+        }
+
+        overlay.classList.remove('hidden');
+        document.querySelectorAll('#act1-narrative-overlay .screen').forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+
+        // Ensure we are at the top of the screen/container
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    _hideOverlay() {
+        const overlay = document.getElementById('act1-narrative-overlay');
+        if (overlay) overlay.classList.add('hidden');
     }
 
     _highlightHexBriefly(hex) {
@@ -623,9 +641,8 @@ class Act1Trap {
         this._updateUI();
         this._showPhaseInstructions(1);
 
-        // Hide debrief
-        const debriefEl = document.getElementById('act1-debrief');
-        if (debriefEl) debriefEl.style.display = 'none';
+        // Hide overlay
+        this._hideOverlay();
 
         this._startAnimation();
     }

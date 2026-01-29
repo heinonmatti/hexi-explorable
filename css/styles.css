@@ -1064,8 +1064,8 @@ input[type="range"]::-moz-range-thumb {
     display: none;
 }
 
-/* Hide Act 2 content while overlay is showing */
-#act2-narrative-overlay:not(.hidden)~.act-content {
+/* Hide Act content while overlay is showing */
+.narrative-overlay:not(.hidden)~.act-content {
     display: none;
 }
 

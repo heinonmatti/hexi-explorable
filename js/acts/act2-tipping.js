@@ -391,6 +391,9 @@ class Act2Tipping {
         overlay.classList.remove('hidden');
         document.querySelectorAll('.narrative-overlay .screen').forEach(s => s.classList.remove('active'));
         screen.classList.add('active');
+
+        // Ensure we are at the top of the screen for mobile
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     _hideOverlay() {

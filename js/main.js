@@ -23,6 +23,55 @@ class ResilienceLandscapesApp {
     }
 
     /**
+     * Helper to submit forms to Netlify with duplicate and honeypot protection
+     */
+    async _submitForm(form, onSuccess = null) {
+        if (!form || form.dataset.submitted === 'true') return;
+
+        // Honeypot check
+        const honeypot = form.querySelector('.ohnohoney input');
+        if (honeypot && honeypot.value) {
+            console.warn('Bot detected via honeypot');
+            form.dataset.submitted = 'true';
+            if (onSuccess) onSuccess(); // Treat as success to the user
+            return;
+        }
+
+        // Check if has actual data (excluding technical/hidden fields)
+        const formData = new FormData(form);
+        let hasData = false;
+        for (let [name, value] of formData.entries()) {
+            if (name !== 'form-name' &&
+                name !== 'act' &&
+                name !== 'website' &&
+                name !== 'cant_think_of_anything' &&
+                value.trim() !== '') {
+                hasData = true;
+                break;
+            }
+            if (name === 'cant_think_of_anything' && value === 'yes') {
+                hasData = true;
+                break;
+            }
+        }
+
+        if (!hasData) return;
+
+        try {
+            await fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(formData).toString(),
+            });
+            console.log(`✅ Form ${form.name} submitted`);
+            form.dataset.submitted = 'true';
+            if (onSuccess) onSuccess();
+        } catch (error) {
+            console.error(`❌ Submission error for ${form.name}:`, error);
+        }
+    }
+
+    /**
      * Initialize the app
      */
     init() {
@@ -56,10 +105,10 @@ class ResilienceLandscapesApp {
             startBtn.addEventListener('click', this._onStartClick);
         }
 
-        // Continue buttons
-        const continueToIntermission = document.getElementById('continue-to-intermission');
-        if (continueToIntermission) {
-            continueToIntermission.addEventListener('click', () => {
+        // Act 1 Debrief Continue Button
+        const act1Continue = document.getElementById('act1-btn-continue');
+        if (act1Continue) {
+            act1Continue.addEventListener('click', () => {
                 this._startAct(2);
             });
         }
@@ -69,37 +118,12 @@ class ResilienceLandscapesApp {
             sendFeedbackBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const form = document.querySelector('form[name="act1-feedback"]');
-
-                // Honeypot check - if filled, silently abort (don't alert bots)
-                const honeypot = document.getElementById('website');
-                if (honeypot && honeypot.value) {
-                    console.log('Bot detected via honeypot');
-                    // Show fake success to not alert bot
+                this._submitForm(form, () => {
                     const thanksEl = document.getElementById('feedback-thanks');
                     if (thanksEl) thanksEl.style.display = 'block';
                     sendFeedbackBtn.disabled = true;
                     sendFeedbackBtn.textContent = 'Shared';
-                    return;
-                }
-
-                // Submit to Netlify via AJAX
-                fetch("/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams(new FormData(form)).toString(),
-                })
-                    .then(() => {
-                        console.log('User Feedback submitted to Netlify');
-
-                        // Show thanks
-                        const thanksEl = document.getElementById('feedback-thanks');
-                        if (thanksEl) thanksEl.style.display = 'block';
-
-                        // Disable button
-                        sendFeedbackBtn.disabled = true;
-                        sendFeedbackBtn.textContent = 'Shared';
-                    })
-                    .catch((error) => console.error('Feedback submission error:', error));
+                });
             });
         }
 
@@ -113,7 +137,18 @@ class ResilienceLandscapesApp {
         const continueToAct2Debrief = document.getElementById('continue-to-act2-debrief');
         if (continueToAct2Debrief) {
             continueToAct2Debrief.addEventListener('click', () => {
+                this._hideAllSections();
                 this._showSection('act2-debrief');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        const continueToAct2Debrief2 = document.getElementById('continue-to-act2-debrief-2');
+        if (continueToAct2Debrief2) {
+            continueToAct2Debrief2.addEventListener('click', () => {
+                this._hideAllSections();
+                this._showSection('act2-debrief-extra');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
 
@@ -123,32 +158,12 @@ class ResilienceLandscapesApp {
             sendAct2FeedbackBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const form = document.querySelector('form[name="act2-feedback"]');
-
-                // Honeypot check
-                const honeypot = document.getElementById('website-act2');
-                if (honeypot && honeypot.value) {
-                    console.log('Bot detected via honeypot (act2)');
+                this._submitForm(form, () => {
                     const thanksEl = document.getElementById('act2-feedback-thanks');
                     if (thanksEl) thanksEl.style.display = 'block';
                     sendAct2FeedbackBtn.disabled = true;
                     sendAct2FeedbackBtn.textContent = 'Shared';
-                    return;
-                }
-
-                // Submit to Netlify
-                fetch("/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams(new FormData(form)).toString(),
-                })
-                    .then(() => {
-                        console.log('Act 2 Feedback submitted');
-                        const thanksEl = document.getElementById('act2-feedback-thanks');
-                        if (thanksEl) thanksEl.style.display = 'block';
-                        sendAct2FeedbackBtn.disabled = true;
-                        sendAct2FeedbackBtn.textContent = 'Shared';
-                    })
-                    .catch((error) => console.error('Feedback submission error:', error));
+                });
             });
         }
 
@@ -159,26 +174,23 @@ class ResilienceLandscapesApp {
             if (submitBtn) {
                 submitBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-
-                    // Submit to Netlify
-                    fetch("/", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: new URLSearchParams(new FormData(reflectForm)).toString(),
-                    })
-                        .then(() => {
-                            console.log('Act 2 Reflection submitted');
-                            // Move to Quiz
-                            this._hideAllSections();
-                            this._showSection('act2-quiz');
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        })
-                        .catch((error) => {
-                            console.error('Feedback submission error:', error);
-                            // Move on anyway
-                            this._hideAllSections();
-                            this._showSection('act2-quiz');
-                        });
+                    this._submitForm(reflectForm, () => {
+                        this._hideAllSections();
+                        this._showSection('act2-quiz');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    // If no data, move on anyway (handled by the fact that if _submitForm does nothing if no data, we might need a bypass)
+                    // But usually people will fill it. Let's ensure it moves on if empty.
+                    const formData = new FormData(reflectForm);
+                    let hasData = false;
+                    for (let [name, value] of formData.entries()) {
+                        if (name !== 'form-name' && name !== 'website' && value.trim() !== '') { hasData = true; break; }
+                    }
+                    if (!hasData) {
+                        this._hideAllSections();
+                        this._showSection('act2-quiz');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 });
             }
         }
@@ -249,11 +261,8 @@ class ResilienceLandscapesApp {
 
         this.currentAct = actNumber;
 
-        // Scroll to top of act
-        const actEl = document.getElementById(`act${actNumber}`);
-        if (actEl) {
-            actEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     /**
@@ -380,37 +389,9 @@ class ResilienceLandscapesApp {
 
         forms.forEach(selector => {
             const form = document.querySelector(selector);
-            if (!form) return;
-
-            // Check if there's actual data to submit
-            const formData = new FormData(form);
-            let hasData = false;
-            for (let [name, value] of formData.entries()) {
-                // Ignore technical/hidden fields and empty strings
-                if (name !== 'form-name' &&
-                    name !== 'act' &&
-                    name !== 'website' &&
-                    name !== 'cant_think_of_anything' &&
-                    value.trim() !== '') {
-                    hasData = true;
-                    break;
-                }
-                // Handle checkbox explicitly if needed
-                if (name === 'cant_think_of_anything' && value === 'yes') {
-                    hasData = true;
-                    break;
-                }
+            if (form) {
+                this._submitForm(form);
             }
-
-            if (!hasData) return;
-
-            fetch("/", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(formData).toString(),
-            })
-                .then(() => console.log(`✅ Feedback from ${selector} submitted`))
-                .catch((error) => console.error(`❌ Submission error for ${selector}:`, error));
         });
     }
 

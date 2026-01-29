@@ -95,6 +95,45 @@
         <!-- Act 1: The Trap (Hysteresis) -->
         <section class="act-section" id="act1" style="display: none;">
             <h2>Act 1: The Trap</h2>
+
+            <div id="act1-narrative-overlay" class="narrative-overlay hidden">
+                <!-- Screen 1: Debrief -->
+                <div id="act1-screen-debrief" class="screen">
+                    <h3>What just happened?</h3>
+                    <p>
+                        You probably noticed: it took <strong class="entry-cost">1 click</strong> to fall in,
+                        but it required <strong class="exit-cost">~8 clicks</strong> of persistent effort to escape.
+                    </p>
+                    <p>
+                        This asymmetry is called <strong>hysteresis</strong>.
+                    </p>
+                    <p>
+                        For example: Communities lose trust quickly but rebuild it slowly.
+                        It's easy to fall into bad states, expensive to escape.
+                    </p>
+                    <p>
+                        Or think of a neighborhood that loses its last grocery store.
+                        Residents leave. Property values drop. Getting a new store?
+                        That requires <em>reversing</em> a downward spiral – far harder than the initial decline.
+                    </p>
+                    <p>
+                        It is rarely a single thing that causes anything in human systems, but rather often a
+                        combination of
+                        factors that only become known after the fact. This is captured in the sayings "Everything is
+                        obvious, once you know the answer", as well as "It's tough to make predictions, especially about
+                        the
+                        future."
+                    </p>
+                    <p>
+                        Notice that by moving the ball to the adjacent tiles, you did something very important. You took
+                        steps to the <strong>"adjacent possible"</strong> state; a place you could get from where you
+                        currently were. This
+                        will be explored as we move further.
+                    </p>
+                    <button class="continue-btn" id="act1-btn-continue">Continue →</button>
+                </div>
+            </div>
+
             <div class="act-content">
                 <p class="instruction">
                     The ball sits on a plateau. <strong>Click an adjacent tile</strong> to move the ball.
@@ -116,41 +155,6 @@
             </div>
         </section>
 
-        <!-- Act 1 Debrief -->
-        <section class="debrief-section" id="act1-debrief" style="display: none;">
-            <div class="debrief-content">
-                <h3>What just happened?</h3>
-                <p>
-                    You probably noticed: it took <strong class="entry-cost">1 click</strong> to fall in,
-                    but it required <strong class="exit-cost">~8 clicks</strong> of persistent effort to escape.
-                </p>
-                <p>
-                    This asymmetry is called <strong>hysteresis</strong>.
-                </p>
-                <p>
-                    For example: Communities lose trust quickly but rebuild it slowly.
-                    It's easy to fall into bad states, expensive to escape.
-                </p>
-                <p>
-                    Or think of a neighborhood that loses its last grocery store.
-                    Residents leave. Property values drop. Getting a new store?
-                    That requires <em>reversing</em> a downward spiral – far harder than the initial decline.
-                </p>
-                <p>
-                    It is rarely a single thing that causes anything in human systems, but rather often a combination of
-                    factors that only become known after the fact. This is captured in the sayings "Everything is
-                    obvious, once you know the answer", as well as "It's tough to make predictions, especially about the
-                    future."
-                </p>
-                <p>
-                    Notice that by moving the ball to the adjacent tiles, you did something very important. You took
-                    steps to the <strong>"adjacent possible"</strong> state; a place you could get from where you
-                    currently were. This
-                    will be explored as we move further.
-                </p>
-                <button class="continue-btn" id="continue-to-intermission">Continue →</button>
-            </div>
-        </section>
 
         <!-- Act 1 Intermission (Feedback & Coming Soon) -->
         <section class="act-section" id="intermission" style="display: none;">
@@ -402,6 +406,12 @@
                         style="display: block;">
                         <input type="hidden" name="form-name" value="act2-reflection" />
 
+                        <!-- Honeypot field -->
+                        <div class="ohnohoney">
+                            <label for="website-reflect">Website</label>
+                            <input type="text" name="website" id="website-reflect" autocomplete="off" tabindex="-1" />
+                        </div>
+
                         <label style="display:block; margin-top:1rem; font-weight:bold;">1. Ruin States</label>
                         <p style="font-size:0.9rem; margin-bottom:0.5rem;">What might be a "ruin state" (point of no
                             return) for <span class="val-system">your system</span>?</p>
@@ -452,6 +462,7 @@
                     <p class="scenario">A well-funded hospital is overwhelmed by an unexpected pandemic surge.</p>
                     <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
                     <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <button class="quiz-btn" data-answer="nb">Both in conjunction</button>
                     <div class="feedback"></div>
                 </div>
                 <div class="quiz-question" data-correct="b">
@@ -459,19 +470,29 @@
                         deferred maintenance.</p>
                     <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
                     <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <button class="quiz-btn" data-answer="nb">Both in conjunction</button>
                     <div class="feedback"></div>
                 </div>
                 <div class="quiz-question" data-correct="n">
                     <p class="scenario">A freak lightning strike causes a massive wildfire in a healthy forest.</p>
                     <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
                     <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <button class="quiz-btn" data-answer="nb">Both in conjunction</button>
+                    <div class="feedback"></div>
+                </div>
+                <div class="quiz-question" data-correct="nb">
+                    <p class="scenario">A society where bad governance actors have caused trust to erode, and a single
+                        act of police violence causes riots that spread country-wide.</p>
+                    <button class="quiz-btn" data-answer="n">N-Tipping (Random Shock)</button>
+                    <button class="quiz-btn" data-answer="b">B-Tipping (Eroded Resilience)</button>
+                    <button class="quiz-btn" data-answer="nb">Both in conjunction</button>
                     <div class="feedback"></div>
                 </div>
             </div>
             <button class="continue-btn" id="continue-to-act2-debrief" style="display: none;">Continue →</button>
         </section>
 
-        <!-- Act 2 Debrief -->
+        <!-- Act 2 Debrief Part 1 -->
         <section class="debrief-section" id="act2-debrief" style="display: none;">
             <div class="debrief-content">
                 <h3>Two Paths Towards Change</h3>
@@ -483,18 +504,55 @@
                     <strong>B-Tipping</strong> (bifurcation-induced): The landscape itself changed.
                     The valley eroded until even a gentle breeze was enough to move the ball.
                 </p>
-                <blockquote>
+                <p>
                     We can think of Black Swans – unexpected extreme events with big consequences – as cases of
                     N-tipping. The COVID-19 pandemic would be one for most people (although it wasn't a surprise for the
                     initiated). N-tipping is not always bad; winning the lottery would count, too.<br><br>
                     For other things, there is no perceptible change as we sit in an attractor, but its resilience
-                    slowly erodes – until suddenly the formerly-stable state is destabilised. Such periods of
+                    slowly erodes – until the formerly-stable state is destabilised and we may not even notice until it
+                    actually tips. Such periods of
                     b-tipping-induced instability are times of both opportunity and danger.
-                </blockquote>
+                </p>
                 <p>
                     Most abrupt changes involve <em>both</em>: Consider
                     a system weakened by gradual erosion, finished off by a shock that
                     wouldn't have mattered years earlier.
+                </p>
+                <button class="continue-btn" id="continue-to-act2-debrief-2">Continue →</button>
+            </div>
+        </section>
+
+        <!-- Act 2 Debrief Part 2 -->
+        <section class="debrief-section" id="act2-debrief-extra" style="display: none;">
+            <div class="debrief-content">
+                <p>
+                    Consider the following example, and the idiom <em>The straw that broke the camel's back</em>:
+                </p>
+                <blockquote>
+                    "To give an example of the behaviour change process of smoking cessation: The
+                    combination of influences on behaviour develops a landscape in which one attractor is ‘smoking’, the
+                    other one ‘non-smoking’. Combinations of counselling interventions, environmental factors, access to
+                    tobacco products etc. could make the ‘smoking’ attractor more fragile (i.e., shallower). Hence, a
+                    small additional push could make the system tip to the other attractor (non-smoking) – for
+                    example, a pharmacological intervention that temporarily stopped cravings, improving ability to
+                    resist
+                    temptations. However, if that new attractor (non-smoking) is also rather shallow, another push –
+                    even from random
+                    events such as facing some adversity or disappointment, or being offered a smoke by a colleague –
+                    could make the system tip back to the previous attractor (smoking). In such a way, the process of
+                    stopping smoking and relapsing can be explained as a combination of B and N-tipping." <br><br>
+                    - Adapted from (<a href="https://www.tandfonline.com/doi/full/10.1080/17437199.2022.2146598"
+                        target="_blank">this article</a>)
+                </blockquote>
+                <p>
+                    When the camel's back finally breaks, you may see analysts running to the scene – to examine the
+                    unique back-breaking abilities of the final straw. But often it was never that specific straw! It
+                    was
+                    everything that came before; the forces shaping of the landscape, and those moving the ball.
+                </p>
+
+                <p style="margin-top: 2rem; font-weight: bold;">
+                    What are your impressions of this interactive exploration? We'd love to hear from you.
                 </p>
 
                 <form name="act2-feedback" method="POST" netlify data-netlify="true" class="feedback-form"
@@ -510,6 +568,11 @@
 
                     <textarea name="feedback" id="act2-feedback-text" placeholder="Share your thoughts..."
                         style="width: 100%; min-height: 100px; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
+                    <button type="submit" class="continue-btn" id="send-act2-feedback">Share Thoughts</button>
+                    <p id="act2-feedback-thanks"
+                        style="display: none; color: #4db6ac; font-weight: bold; margin-top: 1rem;">
+                        Thanks for the feedback!
+                    </p>
                 </form>
 
                 <button class="continue-btn" id="continue-to-act3">Continue to Act 3 → [UNDER CONSTRUCTION!]</button>
