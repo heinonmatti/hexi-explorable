@@ -752,27 +752,72 @@ class Act2Tipping {
     }
 
     _drawModeToggle() {
-        const text = this.editMode === 'lift' ? '⬆️ LIFT' : '⬇️ LOWER';
-        this.ctx.font = 'bold 18px "Work Sans", sans-serif';
-        const metrics = this.ctx.measureText(text);
-        const pad = 15;
-        const h = 44;
-        const w = metrics.width + pad * 2;
-        const x = 10;
-        const y = this.canvas.height / (window.devicePixelRatio || 1) - h - 10;
-        this._modeBtnRect = { x, y, w, h };
+        const logicalW = this.canvas.width / (window.devicePixelRatio || 1);
+        const logicalH = this.canvas.height / (window.devicePixelRatio || 1);
+
+        // Toggle switch dimensions
+        this.ctx.font = 'bold 14px "Work Sans", sans-serif';
+        const liftText = '⬆️ LIFT';
+        const lowerText = '⬇️ LOWER';
+        const liftMetrics = this.ctx.measureText(liftText);
+        const lowerMetrics = this.ctx.measureText(lowerText);
+
+        const pad = 12;
+        const h = 38;
+        const liftW = liftMetrics.width + pad * 2;
+        const lowerW = lowerMetrics.width + pad * 2;
+        const totalW = liftW + lowerW;
+        const margin = 10;
+
+        // Position in lower-right corner
+        const x = logicalW - totalW - margin;
+        const y = logicalH - h - margin;
+
+        // Store rect for click detection (entire toggle area)
+        this._modeBtnRect = { x, y, w: totalW, h };
+        // Store individual button rects for precise click detection
+        this._liftBtnRect = { x, y, w: liftW, h };
+        this._lowerBtnRect = { x: x + liftW, y, w: lowerW, h };
+
         this.ctx.save();
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.strokeStyle = this.editMode === 'lift' ? '#E65100' : '#01579B';
-        this.ctx.lineWidth = 2;
+
+        // Draw LIFT button (left side)
+        const isLiftActive = this.editMode === 'lift';
+        this.ctx.fillStyle = isLiftActive ? '#E65100' : 'rgba(200, 200, 200, 0.9)';
         this.ctx.beginPath();
-        this.ctx.roundRect(x, y, w, h, 8);
+        this.ctx.roundRect(x, y, liftW, h, [8, 0, 0, 8]);
         this.ctx.fill();
-        this.ctx.stroke();
-        this.ctx.fillStyle = this.ctx.strokeStyle;
+
+        // LIFT text
+        this.ctx.fillStyle = isLiftActive ? '#fff' : '#666';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText(text, x + w / 2, y + h / 2);
+        this.ctx.fillText(liftText, x + liftW / 2, y + h / 2);
+
+        // Draw LOWER button (right side)
+        const isLowerActive = this.editMode === 'lower';
+        this.ctx.fillStyle = isLowerActive ? '#01579B' : 'rgba(200, 200, 200, 0.9)';
+        this.ctx.beginPath();
+        this.ctx.roundRect(x + liftW, y, lowerW, h, [0, 8, 8, 0]);
+        this.ctx.fill();
+
+        // LOWER text
+        this.ctx.fillStyle = isLowerActive ? '#fff' : '#666';
+        this.ctx.fillText(lowerText, x + liftW + lowerW / 2, y + h / 2);
+
+        // Draw border around entire toggle
+        this.ctx.strokeStyle = '#888';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, totalW, h, 8);
+        this.ctx.stroke();
+
+        // Draw divider line between buttons
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + liftW, y + 4);
+        this.ctx.lineTo(x + liftW, y + h - 4);
+        this.ctx.stroke();
+
         this.ctx.restore();
     }
 
@@ -838,9 +883,18 @@ class Act2Tipping {
     }
 
     _checkModeButtonClick(x, y) {
-        const btn = this._modeBtnRect;
-        if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
-            this.editMode = this.editMode === 'lift' ? 'lower' : 'lift';
+        // Check if clicked on LIFT button
+        if (this._liftBtnRect &&
+            x >= this._liftBtnRect.x && x <= this._liftBtnRect.x + this._liftBtnRect.w &&
+            y >= this._liftBtnRect.y && y <= this._liftBtnRect.y + this._liftBtnRect.h) {
+            this.editMode = 'lift';
+            return true;
+        }
+        // Check if clicked on LOWER button
+        if (this._lowerBtnRect &&
+            x >= this._lowerBtnRect.x && x <= this._lowerBtnRect.x + this._lowerBtnRect.w &&
+            y >= this._lowerBtnRect.y && y <= this._lowerBtnRect.y + this._lowerBtnRect.h) {
+            this.editMode = 'lower';
             return true;
         }
         return false;
