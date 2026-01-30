@@ -173,6 +173,7 @@ class Act2Tipping {
         // 1. Reset setup for demo
         this.isComplete = false;
         this.ruinPositions = []; // Clear skulls from previous stages
+        this.harvestingParticles = []; // Clear any residual stars
         this._setupLandscape(); // Reset terrain stamps
         if (this.ball) this.ball.terrain = this.terrain; // Re-link!
 
@@ -206,6 +207,7 @@ class Act2Tipping {
         this.state = 'sensitivity_demo'; // Ensure update loop knows we are in demo
         this.demoState = 'run2';
         this.ruinPositions = []; // SAFETY: Clear any potential skulls
+        this.harvestingParticles = []; // Clear previous harvesting stars
         this._hideOverlay();
 
         const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
@@ -317,7 +319,6 @@ class Act2Tipping {
                 } else {
                     this.stop();
                     // Instead of full exit, maybe show sensitivity option? 
-                    // But if this button IS the "Show me" button now, it's handled below.
                 }
             };
         }
@@ -402,7 +403,7 @@ class Act2Tipping {
 
     _hideOverlay() {
         const overlay = document.getElementById('act2-narrative-overlay');
-        overlay.classList.add('hidden');
+        if (overlay) overlay.classList.add('hidden');
     }
 
     _update(dt, timestamp) {
@@ -436,19 +437,14 @@ class Act2Tipping {
                         // Compare
                         if (this._checkSensitivityDivergence()) {
                             this.demoState = 'success';
-                            // Wait a moment then show success? Or immediately
                             setTimeout(() => {
                                 this._showScreen('sensitivity-explainer');
                             }, 500);
                         } else {
                             // Failed to diverge enough. Loop.
-                            // Make Run 2 the new Run 1!
                             this.demoRun1Path = this.demoRun2Path;
                             this.demoRun2Path = null;
                             this.demoState = 'waiting_retry';
-
-                            // Update text to indicate we are trying again?
-                            // For simplicity, just show the same "Start Over" screen
                             this._showScreen('sensitivity-retry');
                         }
                     }
@@ -460,7 +456,6 @@ class Act2Tipping {
         const inDemoRun = this.state === 'sensitivity_demo' && (this.demoState === 'run1' || this.demoState === 'run2') && !this.ball.frozen;
         if ((this.state === 'playing' || this.state === 'observing' || inDemoRun) && !this._goalReachedTime) {
             if (timestamp - this.lastShockTime > this.shockInterval) {
-                // Gentle Shocks: Reduced force to nudge rather than slam
                 const force = 1.2 + Math.random() * 0.8;
                 const angle = Math.random() * Math.PI * 2;
                 this.ball.applyImpulse(Math.cos(angle) * force, Math.sin(angle) * force);
@@ -469,20 +464,37 @@ class Act2Tipping {
             }
         }
 
+        // --- Core Movement ---
         if (this.state === 'playing' || this.state === 'observing' || (this.state === 'sensitivity_demo' && !this.ball.frozen)) {
             this.ball.update(dt);
         }
 
-        // Check Goal
+        // --- Harvesting Effect Particles (Update/Cleanup) ---
+        // Always update particles so they can finish their fade out in any state
+        for (let i = this.harvestingParticles.length - 1; i >= 0; i--) {
+            const p = this.harvestingParticles[i];
+            p.life -= 0.02 * (dt / 16.7);
+            if (p.life <= 0) {
+                this.harvestingParticles.splice(i, 1);
+                continue;
+            }
+            p.wavyOffset += 0.1 * (dt / 16.7);
+            p.x += p.vx + Math.sin(p.wavyOffset) * 0.5;
+            p.y += p.vy;
+        }
+
+        // --- Interaction & Goal Logic ---
         if (this.state === 'playing') {
             const dx = this.ball.x - this.goalPos.x;
             const dy = this.ball.y - this.goalPos.y;
+
+            // Check for collision
             if (Math.hypot(dx, dy) < 28 && !this._goalReachedTime) {
                 this._goalReachedTime = timestamp;
             }
 
-            // --- Harvesting Effect Particles ---
-            // If ball is near goal, spawn particles
+            // --- Harvesting Effect Particles (Spawner) ---
+            // If ball is near goal OR already goal reached, spawn particles
             if (this._goalReachedTime || Math.hypot(dx, dy) < 35) {
                 if (Math.random() < 0.3) {
                     this.harvestingParticles.push({
@@ -498,20 +510,6 @@ class Act2Tipping {
                 }
             }
 
-            // Update particles
-            for (let i = this.harvestingParticles.length - 1; i >= 0; i--) {
-                const p = this.harvestingParticles[i];
-                p.life -= 0.02 * (dt / 16.7);
-                if (p.life <= 0) {
-                    this.harvestingParticles.splice(i, 1);
-                    continue;
-                }
-                p.wavyOffset += 0.1 * (dt / 16.7);
-                p.x += p.vx + Math.sin(p.wavyOffset) * 0.5;
-                p.y += p.vy;
-            }
-            // -----------------------------------
-
             if (this._goalReachedTime && timestamp - this._goalReachedTime > 1500) {
                 this._handleWin();
             }
@@ -521,9 +519,7 @@ class Act2Tipping {
                 const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
                 if (this.ball.x > logicalWidth * 0.5) {
                     this.isSurprised = true;
-                    // Original goal turns into a ruin
                     this.ruinPositions.push({ ...this.goalPos });
-                    // Move goal to North-West
                     const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
                     this.goalPos = { x: logicalWidth * 0.2, y: logicalHeight * 0.2 };
                     this.surpriseTimer = timestamp;
@@ -554,7 +550,6 @@ class Act2Tipping {
         this.isComplete = true;
 
         if (this.stageAttempt === 2) {
-            // Compare results
             const resultDiv = document.getElementById('comparison-result');
             if (this.clickCount < this.prevClickCount) {
                 resultDiv.innerHTML = `<p><strong>Congratulations!</strong> You reached the goal in <strong>${this.clickCount}</strong> stamps, down from the <strong>${this.prevClickCount}</strong> of last time. Working smartly paid off!</p>`;
@@ -563,7 +558,6 @@ class Act2Tipping {
             }
 
             if (this.stageMode === 2) {
-                // Adjust text for Stage 2 Final Try (The Ruin Shift)
                 const comparisonScreen = document.getElementById('act2-screen-comparison');
                 const paragraphs = comparisonScreen.querySelectorAll('p');
                 if (paragraphs.length >= 3) {
@@ -572,19 +566,15 @@ class Act2Tipping {
                 const btn = document.getElementById('act2-btn-replay-2');
                 if (btn) btn.textContent = "Start Final Challenge";
             } else {
-                // Restore defaults for Stage 1
                 const comparisonScreen = document.getElementById('act2-screen-comparison');
                 const paragraphs = comparisonScreen.querySelectorAll('p');
                 const btn = document.getElementById('act2-btn-replay-2');
                 if (btn) btn.textContent = "Start Final Try";
             }
-
             this._showScreen('comparison');
         } else if (this.stageAttempt === 3) {
-            // End of stage
             this._showScreen('final');
         } else {
-            // First win
             document.querySelectorAll('.val-clicks').forEach(el => el.textContent = this.clickCount);
             this._showScreen('strategy');
         }
@@ -592,96 +582,57 @@ class Act2Tipping {
 
     _checkSensitivityDivergence() {
         if (!this.demoRun1Path || !this.demoRun2Path) return false;
-
-        const p1 = this.demoRun1Path;
-        const p2 = this.demoRun2Path;
-
-        // Vector 1
-        const v1x = p1.end.x - p1.start.x;
-        const v1y = p1.end.y - p1.start.y;
-
-        // Vector 2
-        const v2x = p2.end.x - p2.start.x;
-        const v2y = p2.end.y - p2.start.y;
-
+        const v1x = this.demoRun1Path.end.x - this.demoRun1Path.start.x;
+        const v1y = this.demoRun1Path.end.y - this.demoRun1Path.start.y;
+        const v2x = this.demoRun2Path.end.x - this.demoRun2Path.start.x;
+        const v2y = this.demoRun2Path.end.y - this.demoRun2Path.start.y;
         const mag1 = Math.hypot(v1x, v1y);
         const mag2 = Math.hypot(v2x, v2y);
-
-        if (mag1 < 5 || mag2 < 5) return false; // Too small movement to compare angles
-
+        if (mag1 < 5 || mag2 < 5) return false;
         const dot = v1x * v2x + v1y * v2y;
         const cosAngle = dot / (mag1 * mag2);
-
-        // Clamp for safety
         const clampedCos = Math.max(-1, Math.min(1, cosAngle));
-        const angleRad = Math.acos(clampedCos);
-        const angleDeg = angleRad * (180 / Math.PI);
-
+        const angleDeg = Math.acos(clampedCos) * (180 / Math.PI);
         console.log(`Sensitivity Test: Angle diff = ${angleDeg.toFixed(1)} degrees`);
-
         return angleDeg > 30;
     }
 
     _draw() {
         if (!this.ctx) return;
-
-        // Safety clear - prevents trails if terrain render fails
-        // Use logic coordinates because we scaled the context
         const logicalW = this.canvas.width / (window.devicePixelRatio || 1);
         const logicalH = this.canvas.height / (window.devicePixelRatio || 1);
         this.ctx.clearRect(0, 0, logicalW, logicalH);
 
-        // 1. Draw Terrain
         this.terrain.draw(this.ctx);
-
-        // 2. Draw Goal
         if (this.state !== 'sensitivity_demo') {
             this._drawGoal();
         } else {
-            // Draw traces for sensitivity demo
             this._drawSensitivityTraces();
         }
-
-        // 3. Draw Shock Arrow
         this._drawShockArrow();
-
-        // 4. Draw Ball
-        if (this.ball) {
-            this.ball.draw(this.ctx, true);
-        }
-
-        // Draw harvesting particles
+        if (this.ball) this.ball.draw(this.ctx, true);
         this._drawHarvestingParticles();
-
-        // 5. Draw Illegal clicks
         this._drawIllegalClicks();
-
-        // 6. Draw UI
         this._drawUI();
     }
 
     _drawIllegalClicks() {
         if (this.illegalClicks.length === 0) return;
-
         const now = performance.now();
-        const duration = 1000; // 1 second fade
-
+        const duration = 1000;
         this.ctx.save();
         this.ctx.font = 'bold 24px "Work Sans", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-
         for (let i = this.illegalClicks.length - 1; i >= 0; i--) {
             const click = this.illegalClicks[i];
             const elapsed = now - click.startTime;
-
             if (elapsed > duration) {
                 this.illegalClicks.splice(i, 1);
                 continue;
             }
-
             const alpha = 1.0 - (elapsed / duration);
-            this.ctx.fillStyle = `rgba(211, 47, 47, ${alpha})`; // Red 700
+            this.ctx.fillStyle = `rgba(211, 47, 47, ${alpha})`;
             this.ctx.fillText('X', click.x, click.y);
         }
         this.ctx.restore();
@@ -698,7 +649,6 @@ class Act2Tipping {
         this.ctx.fillText('⭐', x, y);
         this.ctx.restore();
 
-        // Draw Ruins
         for (const ruin of this.ruinPositions) {
             this.ctx.save();
             this.ctx.shadowBlur = 10;
@@ -713,15 +663,12 @@ class Act2Tipping {
 
     _drawHarvestingParticles() {
         if (this.harvestingParticles.length === 0) return;
-
         this.ctx.save();
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-
         for (const p of this.harvestingParticles) {
             this.ctx.globalAlpha = p.life;
             this.ctx.font = `${p.size}px sans-serif`;
-            // Small stars should be yellow/gold
             this.ctx.shadowBlur = 5;
             this.ctx.shadowColor = 'gold';
             this.ctx.fillText('⭐', p.x, p.y);
@@ -729,58 +676,40 @@ class Act2Tipping {
         this.ctx.restore();
     }
 
-    /**
-     * Draw arrow indicating the last shock
-     */
     _drawShockArrow() {
         if (!this.activeShock) return;
-
         const duration = 600;
         const elapsed = performance.now() - this.activeShock.startTime;
-
         if (elapsed > duration) {
             this.activeShock = null;
             return;
         }
-
         const alpha = 1.0 - (elapsed / duration);
         const { x, y, angle, magnitude } = this.activeShock;
-
-        // Scale arrow size by magnitude
         const length = magnitude * 15;
         const headSize = 10;
         const thickness = Math.max(2, magnitude * 1.5);
-        const rim = 12; // Ball radius
+        const rim = 12;
 
         this.ctx.save();
         this.ctx.translate(x, y);
         this.ctx.rotate(angle);
-
         this.ctx.beginPath();
         this.ctx.lineWidth = thickness;
         this.ctx.lineCap = 'round';
-        this.ctx.strokeStyle = `rgba(239, 83, 80, ${alpha})`; // Reddish color for "shock"
-
-        // Arrow points AT the ball from the direction of impact
-        // Impulse is along +X, so impact comes from -X
+        this.ctx.strokeStyle = `rgba(239, 83, 80, ${alpha})`;
         const headX = -rim;
         const tailX = -rim - length;
-
-        // Line
         this.ctx.moveTo(tailX, 0);
         this.ctx.lineTo(headX, 0);
-
-        // Arrowhead at the rim
         this.ctx.moveTo(headX - headSize, -headSize);
         this.ctx.lineTo(headX, 0);
         this.ctx.lineTo(headX - headSize, headSize);
-
         this.ctx.stroke();
         this.ctx.restore();
     }
 
     _drawSensitivityTraces() {
-        // Draw start point
         if (this.demoRun1Path) {
             const s = this.demoRun1Path.start;
             this.ctx.fillStyle = '#000';
@@ -788,8 +717,6 @@ class Act2Tipping {
             this.ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
             this.ctx.fill();
         }
-
-        // Draw Run 1 Trace (Ghost)
         if (this.demoRun1Path && this.demoRun1Path.end) {
             this.ctx.strokeStyle = 'rgba(0,0,0,0.3)';
             this.ctx.setLineDash([5, 5]);
@@ -799,8 +726,6 @@ class Act2Tipping {
             this.ctx.lineTo(this.demoRun1Path.end.x, this.demoRun1Path.end.y);
             this.ctx.stroke();
             this.ctx.setLineDash([]);
-
-            // End point
             this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
             this.ctx.beginPath();
             this.ctx.arc(this.demoRun1Path.end.x, this.demoRun1Path.end.y, 4, 0, Math.PI * 2);
@@ -811,9 +736,7 @@ class Act2Tipping {
     _drawUI() {
         const overlay = document.getElementById('act2-narrative-overlay');
         const isOverlayVisible = overlay && !overlay.classList.contains('hidden');
-
         if (isOverlayVisible || this.state === 'observing' || this.state === 'setup') return;
-
         if (!this.isComplete) {
             this._drawModeToggle();
             this._drawClickCounter();
@@ -829,29 +752,23 @@ class Act2Tipping {
     }
 
     _drawModeToggle() {
-        // ... Reusing styling ...
         const text = this.editMode === 'lift' ? '⬆️ LIFT' : '⬇️ LOWER';
-
         this.ctx.font = 'bold 18px "Work Sans", sans-serif';
         const metrics = this.ctx.measureText(text);
         const pad = 15;
-        const h = 44; // Larger for mobile tap target
+        const h = 44;
         const w = metrics.width + pad * 2;
         const x = 10;
         const y = this.canvas.height / (window.devicePixelRatio || 1) - h - 10;
-
         this._modeBtnRect = { x, y, w, h };
-
         this.ctx.save();
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         this.ctx.strokeStyle = this.editMode === 'lift' ? '#E65100' : '#01579B';
         this.ctx.lineWidth = 2;
-
         this.ctx.beginPath();
         this.ctx.roundRect(x, y, w, h, 8);
         this.ctx.fill();
         this.ctx.stroke();
-
         this.ctx.fillStyle = this.ctx.strokeStyle;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
@@ -860,92 +777,48 @@ class Act2Tipping {
     }
 
     _setupLandscape() {
-        // 1. Existing custom config (e.g. from loadConfig)
         if (this.customConfig && this.customConfig.heights) {
             this._setupCustomLandscape();
             return;
         }
-
-        // 2. Global Default Configuration from file
         if (window.Act2DefaultLandscape && window.Act2DefaultLandscape.heights) {
             this.customConfig = window.Act2DefaultLandscape;
             this._setupCustomLandscape();
             return;
         }
-
         const w = this.terrain.width;
         const h = this.terrain.height;
-
-        // 1. Initial Fractal noise
         for (let i = 0; i < this.terrain.heights.length; i++) this.terrain.heights[i] = 0;
-        if (this.terrain.generateFractal) {
-            this.terrain.generateFractal();
-        }
-
-        // 2. Starting Ridge - 25% X, 50% Y
+        if (this.terrain.generateFractal) this.terrain.generateFractal();
         const startX = w * 0.25;
         const startY = h * 0.5;
         this.terrain.raise(startX, startY, 4.0, w * 0.15);
-
-        // 3. C-shaped valley wrapping around the Ridge
-        // The valley arches around the ridge from North to West to South
-        // Each arm and the back are built as distinct attractors
-
-        // North Arm of C
         this.terrain.raise(w * 0.35, h * 0.25, -4.0, w * 0.12);
         this.terrain.raise(w * 0.2, h * 0.25, -4.0, w * 0.12);
-
-        // Back of C (West side)
         this.terrain.raise(w * 0.08, h * 0.5, -4.0, w * 0.15);
-
-        // South Arm of C
         this.terrain.raise(w * 0.2, h * 0.75, -4.0, w * 0.12);
         this.terrain.raise(w * 0.35, h * 0.75, -4.0, w * 0.12);
-
-        // Extra attractor in the valley mouth (poking towards South West)
         this.terrain.raise(w * 0.2, h * 0.85, -3.5, w * 0.15);
-
-        // 4. Middle Barrier (Ridge)
         for (let y = 0; y <= h; y += h / 5) {
             const jX = w * 0.55 + (Math.random() - 0.5) * 50;
             this.terrain.raise(jX, y, 1.4, w * 0.12);
         }
-
-        // 5. Build Goal Ridge
         this.goalPos = { x: w * 0.85, y: h * 0.5 };
         this.terrain.raise(this.goalPos.x, this.goalPos.y, 4.0, w * 0.15);
-
-        // Smooth everything to blend noise with stamps
-        // Texturize to match manual edits
         this.terrain.addNoise(0.2, 50.0);
     }
 
-    /**
-     * Setup click handler
-     */
     _setupClickHandler() {
         this.canvas.onmousedown = (e) => {
             if (this.state !== 'playing' || this.isComplete) return;
-
-            // Ignore right-clicks for terrain modification (prevent double action)
             if (e.button !== 0) return;
-
             const rect = this.canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            // Logical coordinates (CSS pixels)
             const x = (e.clientX - rect.left) * (this.canvas.width / rect.width / dpr);
             const y = (e.clientY - rect.top) * (this.canvas.height / rect.height / dpr);
-
-            // Check for UI clicks
             if (this._checkModeButtonClick(x, y)) return;
-
-            // Terrain interaction limits
             const currentH = this.terrain.getHeightAt(x, y);
             const amt = this.editMode === 'lift' ? 2.5 : -2.5;
-
-            // Check if modification should be blocked ("go offline")
-            // Use 95% threshold to account for smoothing (4.0 * 0.95 = 3.8)
-            // If the area is already "peaked" or "pitted", stop expanding the stamp
             if (this.editMode === 'lift' && currentH >= (this.MAX_HEIGHT * 0.95)) {
                 this.illegalClicks.push({ x, y, startTime: performance.now() });
                 return;
@@ -954,15 +827,10 @@ class Act2Tipping {
                 this.illegalClicks.push({ x, y, startTime: performance.now() });
                 return;
             }
-
             this.terrain.raise(x, y, amt, 40);
             this.clickCount++;
-
-            // Wake up ball
             this.ball.applyImpulse((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
         };
-
-        // Right-click toggles mode
         this.canvas.oncontextmenu = (e) => {
             e.preventDefault();
             this.editMode = this.editMode === 'lift' ? 'lower' : 'lift';
@@ -980,13 +848,11 @@ class Act2Tipping {
 
     _startAnimation() {
         const animate = (timestamp) => {
-            if (!this.canvas) return; // Stopped
+            if (!this.canvas) return;
             this.animationId = requestAnimationFrame(animate);
-
             this.lastTime = this.lastTime || timestamp;
             const dt = timestamp - this.lastTime;
             this.lastTime = timestamp;
-
             this._update(dt, timestamp);
             this._draw();
         };
@@ -999,120 +865,69 @@ class Act2Tipping {
 
     reset() {
         console.log('Act2Tipping Reset - Stage:', this.stageMode, 'Attempt:', this.stageAttempt);
-
-        // Stop any existing animation
         if (this.animationId) cancelAnimationFrame(this.animationId);
-
-        // Reset flags
         this.isComplete = false;
         this.clickCount = 0;
         this._goalReachedTime = 0;
         this.isSurprised = false;
         this.ruinPositions = [];
         this.surpriseTimer = 0;
-        this.lastTime = 0; // Trigger timestamp sync in animation
-        this.illegalClicks = []; // Clear old feedback
+        this.lastTime = 0;
+        this.illegalClicks = [];
         this.harvestingParticles = [];
-
-        // Re-setup environment
         this._setupLandscape();
-
-        // Reset ball
         const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
         const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
-
         if (this.ball) {
             if (this.customConfig && this.customConfig.ballStart) {
-                // Use custom start position
                 this.ball.x = this.customConfig.ballStart.x * logicalWidth;
                 this.ball.y = this.customConfig.ballStart.y * logicalHeight;
             } else {
-                // Default start position
                 this.ball.x = logicalWidth * 0.25;
                 this.ball.y = logicalHeight * 0.5;
             }
             this.ball.vx = 0;
             this.ball.vy = 0;
-            this.ball.terrain = this.terrain; // Re-link
+            this.ball.terrain = this.terrain;
         }
-
-        // Populate Ruins based on attempt
         this._populateRuins();
-
-        // Restart loop
         this._startAnimation();
     }
 
-    /**
-     * Load a custom scenario configuration
-     * @param {Object} config - { heights: number[], ballStart: {x, y} }
-     */
     loadConfig(config) {
         this.customConfig = config;
         this.reset();
     }
 
-    /**
-     * Apply custom landscape data
-     */
     _setupCustomLandscape() {
         if (!this.customConfig || !this.customConfig.heights) return;
-
-        // Check if resolution matches. If not, resize Terrain to match incoming data
         if (this.terrain.heights.length !== this.customConfig.heights.length) {
             const newRes = Math.sqrt(this.customConfig.heights.length);
             if (Number.isInteger(newRes)) {
-                console.log(`Resizing Act 2 terrain to ${newRes} to match custom config`);
                 this.terrain = new Terrain(this.terrain.width, this.terrain.height, newRes);
-            } else {
-                console.warn("Custom landscape data length is not a square number!");
             }
         }
-
         if (this.terrain.heights.length === this.customConfig.heights.length) {
             this.terrain.heights.set(this.customConfig.heights);
         }
-
-        // We do NOT run noise or other procedural steps on top
-        // But we DO build the goal, as that's part of the game logic, not the terrain shape per se?
-        // Actually, the user wants "form that initiates Act 2". The goal is usually at a fixed place.
-        // Let's keep the goal procedural so the game is playable, unless the user wants to set the goal too.
-        // The prompt says "landscape form... ball starting location". 
-        // Act 2 logic depends on a goal at 85%, 50%. Let's keep that for now.
-
         const w = this.terrain.width;
         const h = this.terrain.height;
         this.goalPos = { x: w * 0.85, y: h * 0.5 };
-
-        // Ensure goal area is accessible/marked?
-        // The original code raises a ridge for the goal. We should probably add that if it's not in the custom map.
-        // But the user might have painted it. Let's assume the user painted the landscape fully.
-        // Only ensuring the goal marker position is set.
     }
-    /**
-     * Populate ruin positions based on current attempt
-     */
+
     _populateRuins() {
         const dpr = window.devicePixelRatio || 1;
         const w = this.canvas.width / dpr;
         const h = this.canvas.height / dpr;
-
         if (this.stageAttempt === 2) {
             this.ruinPositions.push({ x: w * 0.5, y: h * 0.25 });
         } else if (this.stageAttempt === 3) {
-            // Persistent Attempt 2 skull
             this.ruinPositions.push({ x: w * 0.5, y: h * 0.25 });
-
-            // 3 New Skulls (Percent-based coords)
-            // 10, 70 (10% right, 70% up from bottom)
             this.ruinPositions.push({ x: w * 0.1, y: h * 0.3 });
-            // 40, 10 (40% right, 10% up from bottom)
             this.ruinPositions.push({ x: w * 0.4, y: h * 0.9 });
-            // 60, 35 (60% right, 35% up from bottom)
             this.ruinPositions.push({ x: w * 0.6, y: h * 0.65 });
         }
     }
 }
-
 
 window.Act2Tipping = Act2Tipping;
