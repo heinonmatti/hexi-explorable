@@ -231,10 +231,15 @@ class Act2Tipping {
     _setupCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const containerWidth = this.canvas.parentElement ? this.canvas.parentElement.clientWidth : window.innerWidth;
-        const aspect = 0.6;
+
+        // Use taller aspect ratio on mobile for better usability
+        const isMobile = window.innerWidth < 600;
+        const aspect = isMobile ? 0.85 : 0.6;
+
         // Ensure strictly positive width to avoid negative dimensions issues
         const safeWidth = Math.max(300, containerWidth || window.innerWidth);
-        const cssWidth = Math.min(800, safeWidth - 20);
+        // On mobile, use full width; on desktop, cap at 800px
+        const cssWidth = isMobile ? (safeWidth - 20) : Math.min(800, safeWidth - 20);
         const cssHeight = cssWidth * aspect;
 
         this.canvas.style.width = `${cssWidth}px`;
