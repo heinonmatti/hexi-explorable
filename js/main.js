@@ -54,8 +54,6 @@ class ResilienceLandscapesApp {
                 name !== 'act' &&
                 name !== 'website' &&
                 name !== 'cant_think_of_anything' &&
-                name !== 'system' &&
-                name !== 'goal' &&
                 value.trim() !== '') {
                 hasData = true;
                 break;
@@ -163,20 +161,6 @@ class ResilienceLandscapesApp {
             });
         }
 
-        // Act 2 feedback form
-        const sendAct2FeedbackBtn = document.getElementById('send-act2-feedback');
-        if (sendAct2FeedbackBtn) {
-            sendAct2FeedbackBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const form = document.querySelector('form[name="act2-feedback"]');
-                this._submitForm(form, () => {
-                    const thanksEl = document.getElementById('act2-feedback-thanks');
-                    if (thanksEl) thanksEl.style.display = 'block';
-                    sendAct2FeedbackBtn.disabled = true;
-                    sendAct2FeedbackBtn.textContent = 'Shared';
-                });
-            });
-        }
 
         // Act 2 Reflection (Sensitivity Demo)
         const reflectForm = document.querySelector('form[name="act2-reflection"]');

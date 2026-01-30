@@ -62,6 +62,9 @@ class Act2Tipping {
         this.demoRun2Path = null;
         this.demoStartTime = 0;
         this.demoDuration = 3000; // 3 seconds per run
+
+        // Harvesting goal effect
+        this.harvestingParticles = [];
     }
 
     /**
@@ -113,6 +116,7 @@ class Act2Tipping {
         this.ruinPositions = [];
         this.surpriseTimer = 0;
         this._goalReachedTime = 0;
+        this.harvestingParticles = [];
 
         // Sync system/goal labels from localStorage
         const savedSys = localStorage.getItem('hexi_act2_system') || 'the system';
@@ -477,6 +481,37 @@ class Act2Tipping {
                 this._goalReachedTime = timestamp;
             }
 
+            // --- Harvesting Effect Particles ---
+            // If ball is near goal, spawn particles
+            if (this._goalReachedTime || Math.hypot(dx, dy) < 35) {
+                if (Math.random() < 0.3) {
+                    this.harvestingParticles.push({
+                        x: this.ball.x + (Math.random() - 0.5) * 20,
+                        y: this.ball.y - 10,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: -1.5 - Math.random() * 2,
+                        angle: Math.random() * Math.PI * 2,
+                        wavyOffset: Math.random() * Math.PI * 2,
+                        life: 1.0,
+                        size: 10 + Math.random() * 10
+                    });
+                }
+            }
+
+            // Update particles
+            for (let i = this.harvestingParticles.length - 1; i >= 0; i--) {
+                const p = this.harvestingParticles[i];
+                p.life -= 0.02 * (dt / 16.7);
+                if (p.life <= 0) {
+                    this.harvestingParticles.splice(i, 1);
+                    continue;
+                }
+                p.wavyOffset += 0.1 * (dt / 16.7);
+                p.x += p.vx + Math.sin(p.wavyOffset) * 0.5;
+                p.y += p.vy;
+            }
+            // -----------------------------------
+
             if (this._goalReachedTime && timestamp - this._goalReachedTime > 1500) {
                 this._handleWin();
             }
@@ -615,6 +650,9 @@ class Act2Tipping {
             this.ball.draw(this.ctx, true);
         }
 
+        // Draw harvesting particles
+        this._drawHarvestingParticles();
+
         // 5. Draw Illegal clicks
         this._drawIllegalClicks();
 
@@ -671,6 +709,24 @@ class Act2Tipping {
             this.ctx.fillText('💀', ruin.x, ruin.y);
             this.ctx.restore();
         }
+    }
+
+    _drawHarvestingParticles() {
+        if (this.harvestingParticles.length === 0) return;
+
+        this.ctx.save();
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
+        for (const p of this.harvestingParticles) {
+            this.ctx.globalAlpha = p.life;
+            this.ctx.font = `${p.size}px sans-serif`;
+            // Small stars should be yellow/gold
+            this.ctx.shadowBlur = 5;
+            this.ctx.shadowColor = 'gold';
+            this.ctx.fillText('⭐', p.x, p.y);
+        }
+        this.ctx.restore();
     }
 
     /**
@@ -956,6 +1012,7 @@ class Act2Tipping {
         this.surpriseTimer = 0;
         this.lastTime = 0; // Trigger timestamp sync in animation
         this.illegalClicks = []; // Clear old feedback
+        this.harvestingParticles = [];
 
         // Re-setup environment
         this._setupLandscape();
