@@ -234,7 +234,7 @@ class Act2Tipping {
 
         // Use taller aspect ratio on mobile for better usability
         const isMobile = window.innerWidth < 600;
-        const aspect = isMobile ? 0.85 : 0.6;
+        const aspect = isMobile ? 0.95 : 0.6;
 
         // Ensure strictly positive width to avoid negative dimensions issues
         const safeWidth = Math.max(300, containerWidth || window.innerWidth);
