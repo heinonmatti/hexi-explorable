@@ -16,6 +16,15 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QK90VZ0VQW"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-QK90VZ0VQW');
+    </script>
 </head>
 
 <body>
@@ -576,7 +585,9 @@
                 </p>
 
                 <p style="margin-top: 2rem; font-weight: bold;">
-                    What are your impressions of this interactive exploration? Can you think of any real-world analogy or story, of what happened when <span class="val-system">your system</span> was trying to reach <span class="val-goal">the goal</span>? I'd love to hear from you! 
+                    What are your impressions of this interactive exploration? Can you think of any real-world analogy
+                    or story, of what happened when <span class="val-system">your system</span> was trying to reach
+                    <span class="val-goal">the goal</span>? I'd love to hear from you!
                 </p>
 
                 <form name="act2-feedback" method="POST" netlify data-netlify="true" class="feedback-form"
@@ -854,16 +865,17 @@
                         target="_blank">study on behaviour change</a>.
                 </p>
                 <blockquote>
-                    "Anything that has more upside than downside from random events (or certain shocks) is antifragile; the reverse is fragile."
-					<br><br>
-					- Nassim Nicholas Taleb
+                    "Anything that has more upside than downside from random events (or certain shocks) is antifragile;
+                    the reverse is fragile."
+                    <br><br>
+                    - Nassim Nicholas Taleb
                 </blockquote>
                 <p>
                     So, shape your terrain, take care, and see you later!
                 </p>
                 <button class="continue-btn" id="restart-btn-end">Start Over</button>
-				<p>
-                        <em>Based on research by Matti T.J. Heino and colleagues on attractor landscapes and
+                <p>
+                    <em>Based on research by Matti T.J. Heino and colleagues on attractor landscapes and
                         resilience under uncertainty.</em>
                 </p>
             </div>
@@ -884,6 +896,7 @@
     <script src="js/acts/act3-wobble.js"></script>
     <script src="js/acts/act4-panic.js"></script>
     <script src="js/acts/act5-governor.js"></script>
+    <script src="js/analytics.js"></script>
     <script src="js/main.js"></script>
 </body>
 

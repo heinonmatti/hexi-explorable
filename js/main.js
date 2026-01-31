@@ -92,6 +92,11 @@ class ResilienceLandscapesApp {
         // Show intro, hide all acts
         this._showSection('intro');
 
+        // Track initial page view
+        if (typeof Analytics !== 'undefined') {
+            Analytics.trackScreen('intro');
+        }
+
         console.log('✅ Ready');
     }
 
@@ -359,6 +364,10 @@ class ResilienceLandscapesApp {
         const section = document.getElementById(sectionId);
         if (section) {
             section.style.display = 'block';
+            // Track section view
+            if (typeof Analytics !== 'undefined') {
+                Analytics.trackScreen(sectionId);
+            }
         }
     }
 
@@ -403,6 +412,10 @@ class ResilienceLandscapesApp {
      */
     showAct(actId) {
         console.log('Jump to act stage:', actId);
+        // Track direct navigation jump
+        if (typeof Analytics !== 'undefined') {
+            Analytics.trackScreen('jump-' + actId);
+        }
         this._stopAllActs();
         this._hideAllSections();
 

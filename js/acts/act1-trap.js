@@ -468,6 +468,11 @@ class Act1Trap {
         document.querySelectorAll('#act1-narrative-overlay .screen').forEach(s => s.classList.remove('active'));
         screen.classList.add('active');
 
+        // Track screen view for analytics
+        if (typeof Analytics !== 'undefined') {
+            Analytics.trackScreen('act1-' + screenId, 1);
+        }
+
         // Ensure we are at the top of the screen/container
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }

@@ -402,6 +402,11 @@ class Act2Tipping {
         document.querySelectorAll('.narrative-overlay .screen').forEach(s => s.classList.remove('active'));
         screen.classList.add('active');
 
+        // Track screen view for analytics
+        if (typeof Analytics !== 'undefined') {
+            Analytics.trackScreen('act2-' + screenId, 2);
+        }
+
         // Ensure we are at the top of the screen for mobile
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
