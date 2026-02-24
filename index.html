@@ -29,6 +29,28 @@
 
 <body>
     <main id="app">
+        <!-- Progress Navigation -->
+        <nav class="progress-nav" id="progress-nav" style="display: none;">
+            <div class="progress-container">
+                <div class="dot-item" id="dot-act1" data-target="act1" title="Act 1: The Trap">
+                    <div class="dot"></div><span class="dot-label">1</span>
+                </div>
+                <div class="dot-line"></div>
+                <div class="dot-item" id="dot-act2-s1" data-target="act2-s1" title="Act 2.1: Shaping the Terrain">
+                    <div class="dot"></div><span class="dot-label">2.1</span>
+                </div>
+                <div class="dot-line"></div>
+                <div class="dot-item" id="dot-act2-s2" data-target="act2-s2" title="Act 2.2: Dodging Ruin">
+                    <div class="dot"></div><span class="dot-label">2.2</span>
+                </div>
+                <div class="dot-line"></div>
+                <div class="dot-item" id="dot-act2-s3" data-target="act2-s3"
+                    title="Act 2.3: Sensitivity to Initial Conditions">
+                    <div class="dot"></div><span class="dot-label">2.3</span>
+                </div>
+            </div>
+        </nav>
+
         <!-- Introduction -->
         <section class="narrative-section" id="intro">
             <!-- Title Section -->
@@ -48,7 +70,7 @@
             </p>
             <p>
                 Now imagine the surface isn’t flat, but contains hills and valleys. The valleys represent stable
-                patterns – the attractors, collections of similar states that “trap” the ball. It’s easy for the ball to
+                patterns – the "attractors", collections of similar states that trap the ball. It’s easy for the ball to
                 settle into a valley; it requires more effort or perturbation to push it out. The ridges between valleys
                 are called <strong>tipping points</strong>. And somewhere, there is danger that leads
                 to state of permanent destruction; <strong>ruin</strong>.
@@ -68,7 +90,11 @@
                 We should explore this.
             </p>
             <p>
-                In the next few minutes, you'll learn:
+                Play time for each section is between 1-5 minutes, and you'll likely finish the whole thing in less than
+                7-15min.
+                If you need to quit in the interim, you can come back to this page and jump to new sections with the
+                menu
+                in the bottom. Here's what you'll learn:
             </p>
             <ul class="learning-goals">
                 <li><strong>Hysteresis</strong>: Why it's <em>easier to fall</em> into bad states than to climb out</li>
@@ -230,14 +256,23 @@
 
                 <!-- Screen 2: Landscape Mechanics -->
                 <div id="act2-screen-concepts" class="screen">
-                    <h3>The Landscape of States</h3>
+                    <h3>A New Perspective</h3>
+                    <p>In Act 1, you saw how a system falls into an attractor – and you had to exert persistent effort
+                        to push it back out.</p>
+
+                    <p>Now we switch to a more elaborate view of the terrain – one where you have much less direct
+                        control.</p>
+
                     <p>In this view, each coordinate on the landscape represents a possible "state" of your system.</p>
-                    <p><strong>Valleys</strong> are attractors: collections of coordinates that naturally pull the
-                        system toward
-                        them. If <span class="val-goal">your goal</span> is a set of states in an attractor, it's easy
+
+                    <img src="img/landscape.png" alt="The Landscape of States"
+                        style="width:100%; max-width:400px; margin: -05% auto -05% auto; display:block; clip-path: inset(18% 0 18% 0);">
+
+                    <p><strong>Valleys</strong> are collections of coordinates that naturally pull the system toward
+                        them. If <span class="val-goal">your goal</span> is a set of states in a valley, it's easy
                         to maintain it.</p>
-                    <p><strong>Ridges</strong> are "repellors": unstable or difficult states that push the system away.
-                        If <span class="val-goal">your goal</span> is a set of states in a repellor, it's difficult to
+                    <p><strong>Ridges</strong> are unstable or difficult states that push the system away.
+                        If <span class="val-goal">your goal</span> is a set of states on a ridge, it's difficult to
                         maintain it.
                     </p>
                     <p>But navigation is not necessarily about moving the ball directly – it could be about shaping the
@@ -265,19 +300,27 @@
                     <p>Now it's your turn. To help <span class="val-system">the system</span> reach <span
                             class="val-goal">the goal</span>, you must reshape the terrain itself. But first, a few
                         concepts.</p>
-                    <p>When real systems abruptly change their state ("tip"), it happens by one or both of the following
-                        processes:</p>
+                    <p>When real systems abruptly change their state ("tip"), you can think of it happening in different
+                        ways:</p>
                     <p>
-                        <strong>N-Tipping</strong> ("noise-induced"): In Act 1, you nudged the system over a tipping
-                        point, and it fell into the attractor valley.
+                        <strong>Control-driven Tipping</strong>: In Act 1, you deliberately pushed the system over a
+                        ridge step by step. This is intentional effort – like choosing to scale a mountain to reach a
+                        new destination.
                     </p>
                     <p>
-                        <strong>B-tipping</strong> ("bifurcation-induced"): Here tipping occurs, when what the landscape
-                        allows, is changed.
+                        <strong>N-Tipping</strong> ("noise-induced"): This is what you just observed with the red
+                        arrows. The system wanders randomly due to unexpected shocks or environmental noise, eventually
+                        being knocked over a tipping point by chance.
+                    </p>
+                    <p>
+                        <strong>B-Tipping</strong> ("bifurcation-induced"): Here, the tipping happens because the
+                        landscape itself changes. What used to be a stability-inducing valley slowly flattens out until
+                        it offers no protection at all. Once that stability is gone, even the smallest amount of
+                        everyday noise will push the system into a new state.
                     </p>
                     <p>In what follows, you're acting more as a steward than a driver of the system. <strong>Stamp the
-                            terrain</strong> (click to lift/lower) to create a path of attractors – and
-                        remove the repellors standing in the way.</p>
+                            terrain</strong> (click to lift/lower) to create a path of valleys – and
+                        remove the ridges standing in the way.</p>
                     <button class="continue-btn" id="act2-btn-start">Start stewarding</button>
                     <p class="tip" style="font-size: 0.85rem; color: #666; margin-top: 0.75rem; font-style: italic;">
                         💡 Tip: On a computer, you can right-click to quickly toggle between lift and lower.
@@ -289,6 +332,10 @@
                     <h3>Success!</h3>
                     <p>You reached <span class="val-goal">the goal</span> in <span class="val-clicks">X</span>
                         stamps.
+                    </p>
+                    <p>By the way, in complex systems science, these <strong>Valleys</strong> are formally called
+                        <strong>Attractors</strong>, and the <strong>Ridges</strong> are called
+                        <strong>Repellors</strong>. You just practically applied attractor dynamics!
                     </p>
                     <p>But can we be more strategic? Often, it's more effective to first <strong>lower terrain below
                             the
@@ -361,8 +408,8 @@
                         can be
                         effective, but only in the appropriate context; in this case, stability. Conversely, in
                         stable
-                        terrains, moving the ball by only shifting the area directly around it, can be very
-                        wasteful.
+                        terrains, moving the ball by only shifting the directly adjacent area can be very
+                        wasteful: You can just .
                     </p>
                     <p>By moulding what's possible, you enabled positive B-tipping and mastered the first stage of
                         managing resilience landscapes.</p>
@@ -411,8 +458,7 @@
                 <div id="act2-screen-sensitivity-explainer" class="screen">
                     <h3>Sensitivity to Initial Conditions</h3>
                     <p>Even though the ball started at the exact same spot, tiny microscopic differences (and
-                        randomness) caused
-                        it to take a completely different path.</p>
+                        randomness) caused it to take quite a different path.</p>
                     <p>This is the hallmark of chaos: <strong>Sensitivity to Initial Conditions</strong> (AKA "the
                         butterfly
                         effect").</p>
@@ -424,57 +470,6 @@
                             href="https://www.tandfonline.com/doi/full/10.1080/17437199.2022.2146598"
                             target="_blank">here</a>.</p>
                     <button class="continue-btn" id="act2-explainer-btn-next">Continue</button>
-                </div>
-
-                <!-- Questionnaire -->
-                <div id="act2-screen-questionnaire" class="screen">
-                    <h3>Reflection</h3>
-                    <p>Help us understand how these concepts apply to your system.</p>
-
-                    <form name="act2-reflection" method="POST" netlify data-netlify="true" class="feedback-form"
-                        style="display: block;">
-                        <input type="hidden" name="form-name" value="act2-reflection" />
-
-                        <!-- Honeypot field -->
-                        <div class="ohnohoney">
-                            <label for="website-reflect">Website</label>
-                            <input type="text" name="website" id="website-reflect" autocomplete="off" tabindex="-1" />
-                        </div>
-
-                        <label style="display:block; margin-top:1rem; font-weight:bold;">1. Ruin States</label>
-                        <p style="font-size:0.9rem; margin-bottom:0.5rem;">What might be a "ruin state" (point of no
-                            return) for <span class="val-system">your system</span>?</p>
-                        <textarea name="ruin_examples"
-                            placeholder="e.g. Bankruptcy, ecological collapse, loss of trust..."
-                            style="width: 100%; min-height: 60px;"></textarea>
-
-                        <label style="display:block; margin-top:1rem; font-weight:bold;">2. Adjacent
-                            Possible</label>
-                        <p style="font-size:0.9rem; margin-bottom:0.5rem;">If <span class="val-system">your
-                                system</span> is your system and <span class="val-goal">the goal</span> is a goal...
-                            what is a positive "adjacent possible" state available right now? E.g. for a person
-                            who's
-                            looking to increase their physical activity, this could be going out for one extra walk
-                            every week.</p>
-                        <textarea name="adjacent_possible" placeholder="A state one step from where you're at"
-                            style="width: 100%; min-height: 60px;"></textarea>
-
-                        <div style="margin-top:1rem;">
-                            <label style="display:flex; align-items:center; gap:0.5rem;">
-                                <input type="checkbox" name="cant_think_of_anything" value="yes">
-                                <span>I can't think of anything right now.</span>
-                            </label>
-                        </div>
-
-                        <p style="font-size: 0.8rem; color: #666; margin-top: 1rem;">
-                            Privacy Note: Your responses are anonymous and help us improve this educational tool.
-                            Avoid
-                            sharing data from which you or others could be identified.
-                        </p>
-
-                        <button type="submit" class="continue-btn" style="margin-top:1rem;">Submit &
-                            Continue</button>
-                    </form>
                 </div>
             </div>
 
@@ -559,6 +554,11 @@
         <section class="debrief-section" id="act2-debrief-extra" style="display: none;">
             <div class="debrief-content">
                 <p>
+                    If we consider the example of smoking, the starting landscape might look something like this:
+                </p>
+                <img src="img/smoking_landscape_schematic.png" alt="Smoking Landscape Schematic"
+                    style="width:100%; max-width:600px; margin: 1rem auto; display:block;">
+                <p>
                     Consider the following example, and the idiom <em>The straw that broke the camel's back</em>:
                 </p>
                 <blockquote>
@@ -574,15 +574,72 @@
                     events such as facing some adversity or disappointment, or being offered a smoke by a colleague –
                     could make the system tip back to the previous attractor (smoking). In such a way, the process of
                     stopping smoking and relapsing can be explained as a combination of B and N-tipping." <br><br>
-                    - Adapted from (<a href="https://www.tandfonline.com/doi/full/10.1080/17437199.2022.2146598"
-                        target="_blank">this article</a>)
+                    - Adapted from <a href="https://www.tandfonline.com/doi/full/10.1080/17437199.2022.2146598"
+                        target="_blank">this article</a>
                 </blockquote>
+                <p>
+                    The process might look something like this:
+                </p>
+                <img src="img/smoking_1d_schematic.png" alt="Smoking 1D Schematic"
+                    style="width:100%; max-width:600px; margin: 1rem auto; display:block;">
                 <p>
                     When the camel's back finally breaks, you may see analysts running to the scene – to examine the
                     unique back-breaking abilities of the final straw. But often it was never that specific straw! It
                     was
                     everything that came before; the forces shaping of the landscape, and those moving the ball.
                 </p>
+
+                <button class="continue-btn" id="continue-to-act2-reflection"
+                    style="margin-top: 2rem;">Continue</button>
+            </div>
+        </section>
+
+        <!-- Act 2 Reflection -->
+        <section class="debrief-section" id="act2-reflection-section" style="display: none;">
+            <div class="debrief-content">
+                <h3>Reflection</h3>
+                <p>Help us understand how these concepts apply to your system.</p>
+
+                <form name="act2-reflection" method="POST" netlify data-netlify="true" class="feedback-form"
+                    style="display: block;">
+                    <input type="hidden" name="form-name" value="act2-reflection" />
+
+                    <!-- Honeypot field -->
+                    <div class="ohnohoney">
+                        <label for="website-reflect">Website</label>
+                        <input type="text" name="website" id="website-reflect" autocomplete="off" tabindex="-1" />
+                    </div>
+
+                    <label style="display:block; margin-top:1rem; font-weight:bold;">1. Ruin States</label>
+                    <p style="font-size:0.9rem; margin-bottom:0.5rem;">What might be a "ruin state" (point of no
+                        return) for <span class="val-system">your system</span>?</p>
+                    <textarea name="ruin_examples" placeholder="e.g. Bankruptcy, ecological collapse, loss of trust..."
+                        style="width: 100%; min-height: 60px;"></textarea>
+
+                    <label style="display:block; margin-top:1rem; font-weight:bold;">2. Adjacent
+                        Possible</label>
+                    <p style="font-size:0.9rem; margin-bottom:0.5rem;">If <span class="val-system">your
+                            system</span> is your system and <span class="val-goal">the goal</span> is a goal...
+                        what is a positive "adjacent possible" state available right now? E.g. for a person
+                        who's
+                        looking to increase their physical activity, this could be going out for one extra walk
+                        every week.</p>
+                    <textarea name="adjacent_possible" placeholder="A state one step from where you're at"
+                        style="width: 100%; min-height: 60px;"></textarea>
+
+                    <div style="margin-top:1rem;">
+                        <label style="display:flex; align-items:center; gap:0.5rem;">
+                            <input type="checkbox" name="cant_think_of_anything" value="yes">
+                            <span>I can't think of anything right now.</span>
+                        </label>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 1rem;">
+                        Privacy Note: Your responses are anonymous and help us improve this educational tool.
+                        Avoid
+                        sharing data from which you or others could be identified.
+                    </p>
+                </form>
 
                 <p style="margin-top: 2rem; font-weight: bold;">
                     What are your impressions of this interactive exploration? Can you think of any real-world analogy
@@ -607,7 +664,7 @@
                         style="width: 100%; min-height: 100px; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 1rem;"></textarea>
                 </form>
 
-                <button class="continue-btn" id="continue-to-act3">Continue</button>
+                <button class="continue-btn" id="continue-to-act3">Submit & Continue to Act 3</button>
             </div>
         </section>
 
@@ -864,18 +921,12 @@
                         communications</a>, or this <a href="https://doi.org/10.1080/17437199.2022.2146598"
                         target="_blank">study on behaviour change</a>.
                 </p>
-                <blockquote>
-                    "Anything that has more upside than downside from random events (or certain shocks) is antifragile;
-                    the reverse is fragile."
-                    <br><br>
-                    - Nassim Nicholas Taleb
-                </blockquote>
                 <p>
                     So, shape your terrain, take care, and see you later!
                 </p>
                 <button class="continue-btn" id="restart-btn-end">Start Over</button>
                 <p>
-                    <em>Based on research by Matti T.J. Heino and colleagues on attractor landscapes and
+                    <em><br>Based on research by Matti T.J. Heino and colleagues on attractor landscapes and
                         resilience under uncertainty.</em>
                 </p>
             </div>

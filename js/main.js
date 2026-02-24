@@ -74,10 +74,13 @@ class ResilienceLandscapesApp {
             });
             console.log(`✅ Form ${form.name} submitted`);
             form.dataset.submitted = 'true';
-            if (onSuccess) onSuccess();
         } catch (error) {
             console.error(`❌ Submission error for ${form.name}:`, error);
+            // Even if local network fetch fails (e.g. file:// protocol), don't trap the user
+            form.dataset.submitted = 'true';
         }
+
+        if (onSuccess) onSuccess();
     }
 
     /**
@@ -110,6 +113,19 @@ class ResilienceLandscapesApp {
             btn.addEventListener('click', () => {
                 const targetAct = btn.dataset.act;
                 this.showAct(targetAct);
+            });
+        });
+
+        // Initialize Progress Navbar clicks
+        const dotItems = document.querySelectorAll('.dot-item');
+        dotItems.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const targetAct = dot.dataset.target;
+                // Only allow jumping if the act has been reached before (i.e. completed class) or we are just navigating freely.
+                // For simplicity let's allow jumping to any act if they are already in an act
+                if (targetAct && this.currentAct > 0) {
+                    this.showAct(targetAct);
+                }
             });
         });
 
@@ -166,34 +182,26 @@ class ResilienceLandscapesApp {
             });
         }
 
-
-        // Act 2 Reflection (Sensitivity Demo)
-        const reflectForm = document.querySelector('form[name="act2-reflection"]');
-        if (reflectForm) {
-            const submitBtn = reflectForm.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this._submitForm(reflectForm, () => {
-                        this._hideAllSections();
-                        this._showSection('act2-quiz');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    });
-                    // If no data, move on anyway (handled by the fact that if _submitForm does nothing if no data, we might need a bypass)
-                    // But usually people will fill it. Let's ensure it moves on if empty.
-                    const formData = new FormData(reflectForm);
-                    let hasData = false;
-                    for (let [name, value] of formData.entries()) {
-                        if (name !== 'form-name' && name !== 'website' && value.trim() !== '') { hasData = true; break; }
-                    }
-                    if (!hasData) {
-                        this._hideAllSections();
-                        this._showSection('act2-quiz');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                });
-            }
+        const btnExplainerNext = document.getElementById('act2-explainer-btn-next');
+        if (btnExplainerNext) {
+            btnExplainerNext.addEventListener('click', () => {
+                this._hideAllSections();
+                this._showSection('act2-quiz');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         }
+
+        const continueToAct2Reflection = document.getElementById('continue-to-act2-reflection');
+        if (continueToAct2Reflection) {
+            continueToAct2Reflection.addEventListener('click', () => {
+                this._hideAllSections();
+                this._showSection('act2-reflection-section');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+
+        // Act 2 Reflection is now submitted along with feedback at the end of act2
 
         const continueToAct3 = document.getElementById('continue-to-act3');
         if (continueToAct3) {
@@ -244,6 +252,9 @@ class ResilienceLandscapesApp {
         // Hide all sections
         this._hideAllSections();
 
+        // Update progress navigation
+        this._updateProgressNav(actNumber);
+
         // Start the appropriate act
         switch (actNumber) {
             case 1:
@@ -256,6 +267,9 @@ class ResilienceLandscapesApp {
                 break;
             case 3:
                 this._showSection('end-screen');
+                if (typeof Analytics !== 'undefined') {
+                    Analytics.trackEvent('app_completed');
+                }
                 break;
         }
 
@@ -382,6 +396,44 @@ class ResilienceLandscapesApp {
     }
 
     /**
+     * Update the progress navigation dots
+     */
+    _updateProgressNav(actId) {
+        const nav = document.getElementById('progress-nav');
+        if (!nav) return;
+
+        if (!actId || actId === 0) {
+            nav.style.display = 'none';
+            return;
+        }
+
+        nav.style.display = 'block';
+
+        const stages = ['act1', 'act2-s1', 'act2-s2', 'act2-s3'];
+        let activeIdx = stages.indexOf(actId);
+
+        // Fallbacks for startAct(number) calls
+        if (actId === 1) activeIdx = 0;
+        if (actId === 2) activeIdx = 1;
+        if (actId === 3 || actId === 4 || actId === 5) activeIdx = stages.length; // completed all
+
+        for (let i = 0; i < stages.length; i++) {
+            const dot = document.getElementById(`dot-${stages[i]}`);
+            if (!dot) continue;
+
+            dot.classList.remove('active', 'completed');
+
+            if (activeIdx !== -1) {
+                if (i === activeIdx) {
+                    dot.classList.add('active');
+                } else if (i < activeIdx) {
+                    dot.classList.add('completed');
+                }
+            }
+        }
+    }
+
+    /**
      * Automatically submit any filled feedback forms for Act 2
      */
     _submitAct2Feedback() {
@@ -422,10 +474,14 @@ class ResilienceLandscapesApp {
         if (actId === 'act1') {
             this._showSection('act1');
             this._initAct1();
+            this._updateProgressNav('act1');
+            this.currentAct = 1;
         } else if (actId.startsWith('act2-s')) {
             const stage = parseInt(actId.substring(6));
             this._showSection('act2');
             this._initAct2(stage);
+            this._updateProgressNav(actId);
+            this.currentAct = 2;
         }
     }
 
@@ -441,6 +497,7 @@ class ResilienceLandscapesApp {
 
         // Reset state
         this.currentAct = 0;
+        this._updateProgressNav(0);
 
         // Show intro
         this._hideAllSections();

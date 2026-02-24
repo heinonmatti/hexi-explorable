@@ -178,8 +178,8 @@ class Act2Tipping {
         if (this.ball) this.ball.terrain = this.terrain; // Re-link!
 
         // 2. Set ball to unstable equilibrium (same as Act 2 start)
-        const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
-        const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+        const logicalWidth = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
+        const logicalHeight = this._logicalH || (this.canvas.height / (window.devicePixelRatio || 1));
 
         // Explicitly set start to the ridge start point
         const startX = logicalWidth * 0.25;
@@ -210,8 +210,8 @@ class Act2Tipping {
         this.harvestingParticles = []; // Clear previous harvesting stars
         this._hideOverlay();
 
-        const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
-        const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+        const logicalWidth = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
+        const logicalHeight = this._logicalH || (this.canvas.height / (window.devicePixelRatio || 1));
 
         const startX = logicalWidth * 0.25;
         const startY = logicalHeight * 0.5;
@@ -230,25 +230,44 @@ class Act2Tipping {
 
     _setupCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        const containerWidth = this.canvas.parentElement ? this.canvas.parentElement.clientWidth : window.innerWidth;
+        let containerWidth = this.canvas.parentElement ? this.canvas.parentElement.clientWidth : 0;
 
-        // Use taller aspect ratio on mobile for better usability
+        // If container width is 0 (likely due to display:none from narrative overlay), 
+        // fallback to querying the widest reliable container or window.
+        if (containerWidth === 0) {
+            const actSection = this.canvas.closest('.act-section');
+            if (actSection) {
+                // Get computed padding to accurately deduct it
+                const style = window.getComputedStyle(actSection);
+                const padLeft = parseFloat(style.paddingLeft) || 0;
+                const padRight = parseFloat(style.paddingRight) || 0;
+                containerWidth = actSection.clientWidth - padLeft - padRight;
+            }
+        }
+
         const isMobile = window.innerWidth < 600;
         const aspect = isMobile ? 1.0 : 0.6;
 
-        // Ensure strictly positive width to avoid negative dimensions issues
         const safeWidth = Math.max(300, containerWidth || window.innerWidth);
-        // On mobile, use full width; on desktop, cap at 800px
-        const cssWidth = isMobile ? (safeWidth - 20) : Math.min(800, safeWidth - 20);
+        const cssWidth = isMobile ? (safeWidth - 20) : Math.min(800, safeWidth);
         const cssHeight = cssWidth * aspect;
 
         this.canvas.style.width = `${cssWidth}px`;
         this.canvas.style.height = `${cssHeight}px`;
-        this.canvas.width = cssWidth * dpr;
-        this.canvas.height = cssHeight * dpr;
-        this.ctx.scale(dpr, dpr);
+
+        // Clear old transforms
+        if (this.ctx) {
+            this.canvas.width = cssWidth * dpr;
+            this.canvas.height = cssHeight * dpr;
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0); // reset
+            this.ctx.scale(dpr, dpr);
+        }
 
         this.terrain = new Terrain(cssWidth, cssHeight, 512);
+
+        // Update UI drawing coordinates based on layout width (guarantees buttons are on screen)
+        this._logicalW = cssWidth;
+        this._logicalH = cssHeight;
     }
 
     _setupNarrativeHandlers() {
@@ -360,7 +379,8 @@ class Act2Tipping {
         const btnExplainerNext = document.getElementById('act2-explainer-btn-next');
         if (btnExplainerNext) {
             btnExplainerNext.onclick = () => {
-                this._showScreen('questionnaire');
+                // Done with act2 tipping. Let main.js handle transition.
+                this.stop();
             };
         }
 
@@ -526,11 +546,11 @@ class Act2Tipping {
 
             // Stage 2 Attempt 3 Surprise logic
             if (this.stageAttempt === 3 && !this.isSurprised) {
-                const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
+                const logicalWidth = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
                 if (this.ball.x > logicalWidth * 0.5) {
                     this.isSurprised = true;
                     this.ruinPositions.push({ ...this.goalPos });
-                    const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+                    const logicalHeight = this._logicalH || (this.canvas.height / (window.devicePixelRatio || 1));
                     this.goalPos = { x: logicalWidth * 0.2, y: logicalHeight * 0.2 };
                     this.surpriseTimer = timestamp;
                 }
@@ -609,8 +629,8 @@ class Act2Tipping {
 
     _draw() {
         if (!this.ctx) return;
-        const logicalW = this.canvas.width / (window.devicePixelRatio || 1);
-        const logicalH = this.canvas.height / (window.devicePixelRatio || 1);
+        const logicalW = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
+        const logicalH = this._logicalH || (this.canvas.height / (window.devicePixelRatio || 1));
         this.ctx.clearRect(0, 0, logicalW, logicalH);
 
         this.terrain.draw(this.ctx);
@@ -758,12 +778,13 @@ class Act2Tipping {
         this.ctx.font = '14px "Work Sans", sans-serif';
         this.ctx.fillStyle = '#333';
         this.ctx.textAlign = 'right';
-        this.ctx.fillText(text, this.canvas.width / (window.devicePixelRatio || 1) - 15, 25);
+        const logicalW = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
+        this.ctx.fillText(text, logicalW - 15, 25);
     }
 
     _drawModeToggle() {
-        const logicalW = this.canvas.width / (window.devicePixelRatio || 1);
-        const logicalH = this.canvas.height / (window.devicePixelRatio || 1);
+        const logicalW = this._logicalW;
+        const logicalH = this._logicalH;
 
         // Toggle switch dimensions
         this.ctx.font = 'bold 14px "Work Sans", sans-serif';
@@ -868,9 +889,14 @@ class Act2Tipping {
             if (this.state !== 'playing' || this.isComplete) return;
             if (e.button !== 0) return;
             const rect = this.canvas.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            const x = (e.clientX - rect.left) * (this.canvas.width / rect.width / dpr);
-            const y = (e.clientY - rect.top) * (this.canvas.height / rect.height / dpr);
+
+            const logicalW = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
+            const logicalH = this._logicalH || (this.canvas.height / (window.devicePixelRatio || 1));
+
+            // Map standard css click points to the logical layout (which handles container squishing gracefully)
+            const x = (e.clientX - rect.left) * (logicalW / rect.width);
+            const y = (e.clientY - rect.top) * (logicalH / rect.height);
+
             if (this._checkModeButtonClick(x, y)) return;
             const currentH = this.terrain.getHeightAt(x, y);
             const amt = this.editMode === 'lift' ? 2.5 : -2.5;
@@ -940,8 +966,8 @@ class Act2Tipping {
         this.illegalClicks = [];
         this.harvestingParticles = [];
         this._setupLandscape();
-        const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
-        const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
+        const logicalWidth = this._logicalW || (this.canvas.width / (window.devicePixelRatio || 1));
+        const logicalHeight = this._logicalH || (this.canvas.height / (window.devicePixelRatio || 1));
         if (this.ball) {
             if (this.customConfig && this.customConfig.ballStart) {
                 this.ball.x = this.customConfig.ballStart.x * logicalWidth;

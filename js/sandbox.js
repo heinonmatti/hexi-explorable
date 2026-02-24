@@ -9,9 +9,10 @@ class Sandbox {
         this.ctx = this.canvas.getContext('2d');
 
         // Configuration
-        this.tool = 'lift'; // lift, lower, ball
+        this.tool = 'lift'; // lift, lower, ball, ruin
         this.terrain = null;
         this.ballPos = { x: 0.25, y: 0.5 }; // Relative coordinates 0-1
+        this.ruins = []; // Array of relative {x,y} points
 
         // Interaction state
         this.isDragging = false;
@@ -50,6 +51,7 @@ class Sandbox {
             // Increased resolution for better visuals
             this.terrain = new Terrain(logicalWidth, logicalHeight, 512);
             this.history = [];
+            this.ruins = [];
             this._updateUndoUI();
 
             if (window.Act2DefaultLandscape && window.Act2DefaultLandscape.heights) {
@@ -151,13 +153,13 @@ class Sandbox {
             e.preventDefault();
             this.isDragging = true;
             this._saveState(); // Save before modification starts
-            this._applyTool(getPos(e));
+            this._applyTool(getPos(e), true);
         };
 
         const handleMove = (e) => {
             e.preventDefault();
             if (this.isDragging) {
-                this._applyTool(getPos(e));
+                this._applyTool(getPos(e), false);
             }
         };
 
@@ -174,16 +176,34 @@ class Sandbox {
         window.addEventListener('touchend', handleEnd);
     }
 
-    _applyTool(pos) {
+    _applyTool(pos, isStart = false) {
         const { x, y } = pos;
         const logicalWidth = this.canvas.width / (window.devicePixelRatio || 1);
         const logicalHeight = this.canvas.height / (window.devicePixelRatio || 1);
 
+        const relX = Math.max(0, Math.min(1, x / logicalWidth));
+        const relY = Math.max(0, Math.min(1, y / logicalHeight));
+
         if (this.tool === 'ball') {
-            this.ballPos = {
-                x: Math.max(0, Math.min(1, x / logicalWidth)),
-                y: Math.max(0, Math.min(1, y / logicalHeight))
-            };
+            this.ballPos = { x: relX, y: relY };
+        } else if (this.tool === 'ruin') {
+            if (isStart) {
+                // Click to add ruin. Click nearby an existing to remove.
+                const threshold = 0.05; // 5% of screen
+                let removed = false;
+                for (let i = 0; i < this.ruins.length; i++) {
+                    const dx = this.ruins[i].x - relX;
+                    const dy = this.ruins[i].y - relY;
+                    if (Math.hypot(dx, dy) < threshold) {
+                        this.ruins.splice(i, 1);
+                        removed = true;
+                        break;
+                    }
+                }
+                if (!removed) {
+                    this.ruins.push({ x: relX, y: relY });
+                }
+            }
         } else {
             // Terrain modification
             const radius = logicalWidth * 0.1;
@@ -237,12 +257,27 @@ class Sandbox {
         this.ctx.textAlign = 'center';
         this.ctx.fillText("START", bx, by - 20);
         this.ctx.restore();
+
+        // Draw Ruins
+        this.ctx.save();
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowColor = 'red';
+        this.ctx.font = '30px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        for (const ruin of this.ruins) {
+            const rx = ruin.x * w;
+            const ry = ruin.y * h;
+            this.ctx.fillText('💀', rx, ry);
+        }
+        this.ctx.restore();
     }
 
     export() {
         const data = {
             version: 1,
             ballStart: this.ballPos,
+            ruins: this.ruins,
             // Convert Float32Array to regular array for JSON
             heights: Array.from(this.terrain.heights),
             resolution: this.terrain.resolution,
@@ -265,6 +300,10 @@ class Sandbox {
 
             // Restore ball
             if (data.ballStart) this.ballPos = data.ballStart;
+
+            // Restore ruins
+            if (data.ruins) this.ruins = [...data.ruins];
+            else this.ruins = [];
 
             // Restore heights
             if (data.heights && this.terrain) {
@@ -298,7 +337,8 @@ class Sandbox {
         // Push state
         this.history.push({
             heights: new Float32Array(this.terrain.heights),
-            ballPos: { ...this.ballPos }
+            ballPos: { ...this.ballPos },
+            ruins: [...this.ruins]
         });
 
         // Limit
@@ -316,6 +356,7 @@ class Sandbox {
         if (state) {
             this.terrain.heights.set(state.heights);
             this.ballPos = state.ballPos;
+            this.ruins = [...(state.ruins || [])];
             this._updateUndoUI();
             this._showMsg("Undo");
         }
