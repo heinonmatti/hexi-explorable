@@ -3,22 +3,48 @@
  * Tracks screen views and user interactions via Google Analytics 4
  */
 const Analytics = {
+    currentSection: null,
+    sectionStartTime: null,
+
     /**
      * Track screen/section views
      * @param {string} screenId - The screen identifier
      * @param {number|null} actNumber - Optional act number for context
      */
     trackScreen(screenId, actNumber = null) {
+        const now = Date.now();
+
+        // 1. Calculate time spent on the PREVIOUS section
+        if (this.currentSection && this.sectionStartTime) {
+            const timeSpentSecs = Math.round((now - this.sectionStartTime) / 1000);
+            if (timeSpentSecs > 0) {
+                this.trackEvent('section_time_spent', {
+                    section_name: this.currentSection,
+                    time_spent_seconds: timeSpentSecs,
+                    // Use GA4's built-in parameter for tracking engagement time
+                    engagement_time_msec: (now - this.sectionStartTime)
+                });
+            }
+        }
+
+        // 2. Start tracking the NEW section
+        this.currentSection = screenId;
+        this.sectionStartTime = now;
+
         if (typeof gtag === 'function') {
             const params = {
-                screen_name: screenId,
+                // Send standard web tracking parameters instead of app parameters
+                page_title: `Section: ${screenId}`,
+                page_path: `/${screenId}`,
                 timestamp: new Date().toISOString()
             };
             if (actNumber !== null) {
                 params.act = actNumber;
             }
-            gtag('event', 'screen_view', params);
-            console.log('[Analytics] Screen:', screenId, actNumber ? `(Act ${actNumber})` : '');
+
+            // Send virtual page_view instead of screen_view
+            gtag('event', 'page_view', params);
+            console.log('[Analytics] Section Started:', screenId);
         }
     },
 
