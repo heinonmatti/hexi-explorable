@@ -23,7 +23,9 @@ class ResilienceLandscapesApp {
     }
 
     /**
-     * Helper to submit forms to Netlify with duplicate and honeypot protection
+     * Submit a feedback form to its declared `action` (Formspree) with
+     * duplicate and honeypot protection. Falls back to POST "/" when no
+     * action is set, for local file:// development.
      */
     async _submitForm(form, onSuccess = null) {
         if (!form || form.dataset.submitted === 'true') return;
@@ -67,9 +69,15 @@ class ResilienceLandscapesApp {
         if (!hasData) return;
 
         try {
-            await fetch("/", {
+            const endpoint = form.action && form.action !== window.location.href
+                ? form.action
+                : "/";
+            await fetch(endpoint, {
                 method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json"
+                },
                 body: new URLSearchParams(updatedFormData).toString(),
             });
             console.log(`✅ Form ${form.name} submitted`);
